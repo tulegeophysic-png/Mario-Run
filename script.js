@@ -60,14 +60,16 @@ function loadLevel(index) {
   movingBridges.forEach((bridge) => { coins.push({ x: bridge.x + bridge.w / 2, y: bridge.y - 44, taken: false, attachedBridge: bridge }); });
   const springSpots = [{ x: towerX + 55, y: 390 }, { x: towerX + 135, y: 270 }];
   springs = springSpots.slice(0, index % 3 === 1 ? 2 : 1);
-  const springMushrooms = springs.map((spring, springIndex) => ({ x: spring.x, y: spring.y - 62, taken: false, w: 32, h: 24, type: springIndex === 1 ? 'green' : 'red' }));
+  const springMushrooms = springs.map((spring, springIndex) => ({ x: spring.x, y: spring.y - 62, taken: false, w: 32, h: 24, type: springIndex === 1 ? 'green' : 'red', springSource: spring }));
   mushrooms.push(...springMushrooms, { x: towerX + 325, y: 186, taken: false, w: 32, h: 24, type: 'red' }, { x: towerX + 155, y: 246, taken: false, w: 32, h: 24, type: 'red' });
   coins.push({ x: towerX + 55, y: 328, taken: false }, { x: towerX + 135, y: 208, taken: false }, { x: towerX + 210, y: 292, taken: false }, { x: towerX + 320, y: 172, taken: false });
   const floorRewardX = 260 + (index % 6) * 500;
   coins.push({ x: floorRewardX, y: 400, taken: false });
   mushrooms.push({ x: floorRewardX + 70, y: 446, taken: false, w: 32, h: 24, type: 'red' });
   const mushroomLimit = index < 3 ? 2 : (index < 6 ? 3 : 4);
-  mushrooms = mushrooms.slice(0, mushroomLimit);
+  const outsideMushroomCount = Math.max(0, mushroomLimit - springMushrooms.length);
+  mushrooms = mushrooms.filter((mushroom) => !mushroom.springSource).slice(0, outsideMushroomCount);
+  mushrooms.push(...springMushrooms);
   mushrooms.push(...movingBridgeMushrooms);
   saws = data.saws.map(([x, y, radius]) => ({ x, y, radius }));
   cacti = data.cacti.map(([x, y, radius]) => ({ x, y, radius }));
@@ -88,10 +90,10 @@ function update(delta) {
   mushrooms.forEach((mushroom) => { if (mushroom.attachedBridge && !mushroom.taken) { mushroom.x = mushroom.attachedBridge.x + mushroom.attachedBridge.w / 2; mushroom.y = mushroom.attachedBridge.y - 14; } });
   coins.forEach((coin) => { if (coin.attachedBridge && !coin.taken) { coin.x = coin.attachedBridge.x + coin.attachedBridge.w / 2; coin.y = coin.attachedBridge.y - 44; } });
   player.vy += 0.0018 * delta;
-  const horizontalAcceleration = (player.greenBoost ? 0.018 : 0.015) * delta;
+  const horizontalAcceleration = (player.greenBoost ? 0.018 : 0.012) * delta;
   const horizontalDirection = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0);
   if (horizontalDirection) { player.vx += horizontalDirection * horizontalAcceleration; player.face = horizontalDirection; } else { player.vx *= player.big ? 0.88 : 0.84; }
-  const maxSpeed = player.greenBoost ? 0.39 : (player.big ? 0.315 : 0.24);
+  const maxSpeed = player.greenBoost ? 0.39 : (player.big ? 0.252 : 0.192);
   player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx)); player.x += player.vx * delta; player.y += player.vy * delta;
   player.x = Math.max(0, Math.min(world.width - player.w, player.x)); player.grounded = false;
   platforms.forEach((platform) => { const overGap = platform.y === 470 && bridgeGaps.some((gap) => player.x + player.w > gap.x && player.x < gap.x + gap.w); if (!overGap && overlap(player, platform) && player.vy >= 0 && player.y + player.h - player.vy * delta <= platform.y + 8) { player.y = platform.y - player.h; player.vy = 0; player.grounded = true; } });
@@ -131,7 +133,7 @@ function draw() {
 }
 function drawFinishGoal() { const flagX = 3045; const poleTop = 245; ctx.fillStyle = '#526477'; ctx.fillRect(flagX, poleTop, 8, 225); ctx.fillStyle = '#d9e1e8'; ctx.beginPath(); ctx.arc(flagX + 4, poleTop - 5, 8, 0, Math.PI * 2); ctx.fill(); const progress = levelEnding ? Math.min(1, Math.max(0, (performance.now() - endStartedAt - 850) / 650)) : 0; ctx.fillStyle = '#e54b45'; ctx.beginPath(); ctx.moveTo(flagX + 8, poleTop + 12 + progress * 160); ctx.lineTo(flagX + 72, poleTop + 30 + progress * 160); ctx.lineTo(flagX + 8, poleTop + 58 + progress * 160); ctx.closePath(); ctx.fill(); const gateX = 3150; ctx.fillStyle = '#8b4e3c'; ctx.fillRect(gateX, 400, 76, 70); ctx.fillStyle = '#d28a4d'; ctx.fillRect(gateX + 10, 390, 56, 80); ctx.fillStyle = '#17233f'; ctx.beginPath(); ctx.arc(gateX + 38, 420, 25, Math.PI, 0); ctx.lineTo(gateX + 63, 470); ctx.lineTo(gateX + 13, 470); ctx.closePath(); ctx.fill(); }
 function loop(time) { const delta = Math.min(32, time - lastTime || 16); lastTime = time; update(delta); draw(); if (!gameOver) requestAnimationFrame(loop); }
-function jump(power = -0.72) { if (player.grounded && !gameOver) { const direction = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0); if (direction) { player.face = direction; player.vx = (player.greenBoost ? 0.39 : (player.big ? 0.315 : 0.24)) * direction; } player.vy = power; player.grounded = false; } }
+function jump(power = -0.72) { if (player.grounded && !gameOver) { const direction = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0); if (direction) { player.face = direction; player.vx = (player.greenBoost ? 0.39 : (player.big ? 0.252 : 0.192)) * direction; } player.vy = power; player.grounded = false; } }
 function highJump() { if (highJumpsRemaining > 0 && player.grounded && !gameOver) { highJumpsRemaining -= 1; jump(-0.7875); updateHud(); } }
 function runJump() { if (runJumpsRemaining > 0 && player.grounded && !gameOver) { runJumpsRemaining -= 1; player.vx = (player.greenBoost ? 0.675 : (player.big ? 0.585 : 0.465)) * player.face; jump(-0.7125); updateHud(); } }
 function playMusicNote(frequency, duration = 0.18) { if (!audioContext || !musicEnabled) return; const oscillator = audioContext.createOscillator(); const gain = audioContext.createGain(); oscillator.type = 'square'; oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.035, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration); oscillator.connect(gain); gain.connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime + duration); }
