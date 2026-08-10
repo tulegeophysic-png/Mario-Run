@@ -35,6 +35,7 @@ for (let levelNumber = 4; levelNumber <= 10; levelNumber += 1) {
 }
 let platforms = []; let coins = []; let mushrooms = []; let clouds = []; let springs = []; let movingBridges = []; let saws = []; let cacti = []; let enemies = []; let snails = []; let player; let score; let coinCount; let mushroomCount; let lives; let levelIndex; let gameOver; let won; let levelEnding = false; let endStartedAt = 0; let cameraX; let lastTime = 0;
 let audioContext; let musicTimer; let musicEnabled = false; let musicStep = 0; let gameOverPlayed = false; let highJumpsRemaining = 2; let runJumpsRemaining = 2;
+const heldKeys = new Set();
 
 function loadLevel(index) {
   const data = levelData[index];
@@ -79,7 +80,12 @@ function update(delta) {
   if (gameOver) return;
   if (levelEnding) { updateLevelFinish(); return; }
   movingBridges.forEach((bridge) => { bridge.x += bridge.speed * bridge.direction * delta / 16; if (bridge.x <= bridge.min || bridge.x >= bridge.max) bridge.direction *= -1; });
-  player.vy += 0.0018 * delta; player.vx *= player.big ? 0.88 : 0.84; player.x += player.vx * delta; player.y += player.vy * delta;
+  player.vy += 0.0018 * delta;
+  const horizontalAcceleration = (player.greenBoost ? 0.018 : 0.014) * delta;
+  const horizontalDirection = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0);
+  if (horizontalDirection) { player.vx += horizontalDirection * horizontalAcceleration; player.face = horizontalDirection; } else { player.vx *= player.big ? 0.94 : 0.91; }
+  const maxSpeed = player.greenBoost ? 0.62 : (player.big ? 0.5 : 0.42);
+  player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx)); player.x += player.vx * delta; player.y += player.vy * delta;
   player.x = Math.max(0, Math.min(world.width - player.w, player.x)); player.grounded = false;
   platforms.forEach((platform) => { if (overlap(player, platform) && player.vy >= 0 && player.y + player.h - player.vy * delta <= platform.y + 8) { player.y = platform.y - player.h; player.vy = 0; player.grounded = true; } });
   springs.forEach((spring) => { const item = { x: spring.x - 14, y: spring.y - 16, w: 28, h: 18 }; if (overlap(player, item) && player.vy >= 0) { player.y = spring.y - player.h - 2; player.vy = -1.44; player.grounded = false; spring.bouncing = true; } });
@@ -143,6 +149,7 @@ async function shareGame() {
   window.setTimeout(() => { shareButton.textContent = '↗ Chia sẻ game'; }, 2200);
 }
 shareButton.addEventListener('click', shareGame);
-document.addEventListener('keydown', (event) => { const moveSpeed = player.greenBoost ? 0.52 : (player.big ? 0.42 : 0.32); if (event.key === 'ArrowLeft') { player.vx = -moveSpeed; player.face = -1; } if (event.key === 'ArrowRight') { player.vx = moveSpeed; player.face = 1; } if (event.key === ' ' || event.key === 'ArrowUp') { event.preventDefault(); jump(); } if (event.key.toLowerCase() === 'z') highJump(); if (event.key.toLowerCase() === 'x') runJump(); if (event.key.toLowerCase() === 'r') resetGame(); });
-document.querySelectorAll('[data-key], [data-action]').forEach((button) => button.addEventListener('pointerdown', () => { if (button.dataset.action === 'highJump') highJump(); else if (button.dataset.action === 'runJump') runJump(); else { const key = button.dataset.key; if (key === 'Space') jump(); else document.dispatchEvent(new KeyboardEvent('keydown', { key })); } }));
+document.addEventListener('keydown', (event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); heldKeys.add(event.key); } if (event.key === ' ' || event.key === 'ArrowUp') { event.preventDefault(); jump(); } if (event.key.toLowerCase() === 'z') highJump(); if (event.key.toLowerCase() === 'x') runJump(); if (event.key.toLowerCase() === 'r') resetGame(); });
+document.addEventListener('keyup', (event) => { heldKeys.delete(event.key); });
+document.querySelectorAll('[data-key], [data-action]').forEach((button) => { button.addEventListener('pointerdown', () => { if (button.dataset.action === 'highJump') highJump(); else if (button.dataset.action === 'runJump') runJump(); else { const key = button.dataset.key; if (key === 'Space') jump(); else heldKeys.add(key); } }); button.addEventListener('pointerup', () => heldKeys.delete(button.dataset.key)); button.addEventListener('pointerleave', () => heldKeys.delete(button.dataset.key)); });
 document.getElementById('restart').addEventListener('click', () => { if (won && levelIndex < levelData.length - 1) { levelIndex += 1; startLevel(); } else if (won) resetGame(); else resetGame(); }); resetGame();
