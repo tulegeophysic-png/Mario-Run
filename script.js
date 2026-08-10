@@ -60,7 +60,8 @@ function loadLevel(index) {
   movingBridges.forEach((bridge) => { coins.push({ x: bridge.x + bridge.w / 2, y: bridge.y - 44, taken: false, attachedBridge: bridge }); });
   const springSpots = [{ x: towerX + 55, y: 390 }, { x: towerX + 135, y: 270 }];
   springs = springSpots.slice(0, index % 3 === 1 ? 2 : 1);
-  const springMushrooms = springs.map((spring, springIndex) => ({ x: spring.x, y: spring.y - 62, taken: false, w: 32, h: 24, type: springIndex === 1 ? 'green' : 'red', springSource: spring }));
+  const springBounceHeight = (1.08 * 1.08) / (2 * 0.0018);
+  const springMushrooms = springs.map((spring, springIndex) => ({ x: spring.x, y: Math.max(88, spring.y - springBounceHeight - 18), taken: false, w: 32, h: 24, type: springIndex === 1 ? 'green' : 'red', springSource: spring }));
   mushrooms.push(...springMushrooms, { x: towerX + 325, y: 186, taken: false, w: 32, h: 24, type: 'red' }, { x: towerX + 155, y: 246, taken: false, w: 32, h: 24, type: 'red' });
   coins.push({ x: towerX + 55, y: 328, taken: false }, { x: towerX + 135, y: 208, taken: false }, { x: towerX + 210, y: 292, taken: false }, { x: towerX + 320, y: 172, taken: false });
   const floorRewardX = 260 + (index % 6) * 500;
