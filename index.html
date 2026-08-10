@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Marrio Run</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<main class="game-shell">
+			<header class="topbar">
+				<div>
+					<p class="eyebrow">PIXEL ADVENTURE 01</p>
+					<h1>Marrio <span>Run</span></h1>
+				</div>
+				<div class="stats" aria-live="polite">
+					<div><small>MÀN</small><strong id="level">01</strong></div>
+					<div><small>ĐIỂM</small><strong id="score">0000</strong></div>
+					<div><small>ĐỒNG XU</small><strong id="coins">00</strong></div>
+				</div>
+			</header>
+
+			<section class="screen-wrap">
+				<canvas id="game" width="960" height="540" aria-label="Trò chơi Marrio Run"></canvas>
+				<div id="message" class="message hidden">
+					<p id="message-title">Hết lượt!</p>
+					<span>Nhấn <b>R</b> hoặc nút bên dưới để chơi lại</span>
+					<button id="restart" type="button">Chơi lại</button>
+				</div>
+			</section>
+
+			<footer class="controls">
+				<span><b>← →</b> di chuyển</span>
+				<span><b>SPACE</b> nhảy</span>
+				<span><b>Z</b> nhảy cao</span>
+				<span><b>X</b> chạy + nhảy</span>
+				<span><b>R</b> chơi lại</span>
+				<button id="music-toggle" type="button" aria-label="Bật hoặc tắt nhạc">♫ Nhạc: Tắt</button>
+				<button id="share-game" type="button" aria-label="Chia sẻ game">↗ Chia sẻ game</button>
+				<div class="touch-controls" aria-label="Điều khiển cảm ứng">
+					<button data-key="ArrowLeft" aria-label="Sang trái">←</button>
+					<button data-key="Space" aria-label="Nhảy">↑</button>
+					<button data-key="ArrowRight" aria-label="Sang phải">→</button>
+					<button data-action="highJump" aria-label="Nhảy cao">Nhảy cao</button>
+					<button data-action="runJump" aria-label="Chạy và nhảy">Chạy + nhảy</button>
+				</div>
+			</footer>
+		</main>
+		<script src="script.js"></script>
+	</body>
+</html>
