@@ -16,94 +16,113 @@ const world = { width: 3200, height: 540, ground: 470 };
 
 let visualEffects = [];
 
+// Khởi tạo danh sách các màn chơi
 const levelData = [
   { 
-    platforms: [[0, 470, 3200, 70], [420, 365, 180, 22], [760, 300, 180, 22], [1110, 390, 220, 22], [1510, 330, 210, 22], [1940, 270, 190, 22], [2310, 370, 220, 22]], 
-    coins: [[500, 320], [820, 245], [1160, 320], [1580, 275], [2010, 215], [2370, 320], [2700, 400]], 
-    mushrooms: [[930, 276], [2050, 246]], 
+    platforms: [[0, 470, 3200, 70], [420, 365, 180, 22], [1110, 390, 220, 22], [1940, 270, 190, 22]], 
+    coins: [[500, 320], [1160, 320], [2010, 215], [2700, 400]], 
     clouds: [[930, 235], [2050, 205]], 
-    saws: [[1000, 450, 22], [1780, 450, 22], [2600, 450, 22]], 
-    cacti: [[1220, 440, 28], [2480, 440, 28]], 
-    enemies: [[1000, 438, 1.2, 950, 1080], [1380, 438, 1.3, 1330, 1480], [1830, 438, 1.6, 1770, 1900], [2200, 438, 1.5, 2150, 2280]],
-    pits: [{ x: 1300, w: 120 }, { x: 2150, w: 140 }],
-    // Ý 1: Rất ít hộp dấu hỏi (thỉnh thoảng mới có 1 hộp)
+    saws: [[1000, 450, 22], [2600, 450, 22]], 
+    cacti: [[1220, 440, 28]], 
+    enemies: [[1000, 438, 1.2, 950, 1080], [1380, 438, 1.3, 1330, 1480], [2200, 438, 1.5, 2150, 2280]],
+    pits: [{ x: 1300, w: 120 }],
     questionBoxes: [
-      { x: 350, y: 320, content: 'mushroom' }
+      { x: 350, y: 320, content: 'coin' }
     ],
-    // Ý 4: Thêm Ống trụ & Bậc thang nhiều bậc
+    // Ống trụ & Cây kéo (Piranha Plant)
     pipes: [
-      { x: 380, y: 410, w: 40, h: 60 },
-      { x: 1050, y: 390, w: 40, h: 80 }
+      { x: 400, y: 390, w: 40, h: 80, plant: false },
+      { x: 1100, y: 390, w: 40, h: 80, plant: true, staticPlant: false }, // Cây trồi lên hạ xuống
+      { x: 2200, y: 390, w: 40, h: 80, plant: true, staticPlant: true }   // Cây cố định
     ],
+    // Ý 4: Bậc thang chuyển hoàn toàn về cuối màn (gần cờ đích ở mốc ~2800px)
     stairs: [
-      // Bậc thang 3 bậc liên tiếp
-      { x: 800, y: 440, w: 30, h: 30 },
-      { x: 830, y: 410, w: 30, h: 60 },
-      { x: 860, y: 380, w: 30, h: 90 }
-    ]
+      { x: 2750, y: 440, w: 30, h: 30 },
+      { x: 2780, y: 410, w: 30, h: 60 },
+      { x: 2810, y: 380, w: 30, h: 90 },
+      { x: 2840, y: 350, w: 30, h: 120 }
+    ],
+    // Ý 1: Cầu di chuyển bố trí thoáng, thưa hơn
+    movingBridges: [
+      { x: 600, y: 395, w: 128, h: 14, min: 540, max: 760, speed: 0.7, direction: 1 }
+    ],
+    bridgeGaps: [{ x: 530, w: 260 }]
   },
   { 
-    platforms: [[0, 470, 3200, 70], [300, 370, 170, 22], [610, 275, 150, 22], [900, 355, 190, 22], [1240, 250, 180, 22], [1560, 350, 140, 22], [1830, 285, 200, 22], [2200, 370, 150, 22], [2530, 250, 170, 22]], 
-    coins: [[370, 325], [680, 225], [980, 310], [1320, 200], [1620, 305], [1920, 235], [2270, 325], [2600, 200], [2900, 400]], 
-    mushrooms: [[680, 251], [1920, 261], [2700, 446]], 
-    clouds: [[680, 210], [1920, 220], [2700, 405]], 
-    saws: [[800, 450, 22], [1460, 450, 22], [2140, 450, 22], [2860, 450, 22]], 
-    cacti: [[1040, 440, 28], [1980, 440, 28], [2760, 440, 28]], 
-    enemies: [[800, 438, 1.5, 750, 860], [1120, 438, 1.7, 1060, 1210], [1710, 438, 1.8, 1640, 1790], [2390, 438, 2, 2320, 2470]],
-    pits: [{ x: 1000, w: 150 }, { x: 1750, w: 130 }],
+    platforms: [[0, 470, 3200, 70], [300, 370, 170, 22], [1240, 250, 180, 22], [2200, 370, 150, 22]], 
+    coins: [[370, 325], [1320, 200], [2270, 325], [2900, 400]], 
+    clouds: [[680, 210], [1920, 220]], 
+    saws: [[800, 450, 22], [2140, 450, 22]], 
+    cacti: [[1040, 440, 28], [2760, 440, 28]], 
+    enemies: [[800, 438, 1.5, 750, 860], [1120, 438, 1.7, 1060, 1210], [2390, 438, 2, 2320, 2470]],
+    pits: [{ x: 1000, w: 150 }],
     questionBoxes: [
       { x: 1200, y: 310, content: 'coin' }
     ],
     pipes: [
-      { x: 450, y: 390, w: 40, h: 80 }
+      { x: 450, y: 390, w: 40, h: 80, plant: true, staticPlant: true },
+      { x: 1500, y: 390, w: 40, h: 80, plant: false }
     ],
     stairs: [
-      { x: 1400, y: 440, w: 30, h: 30 },
-      { x: 1430, y: 410, w: 30, h: 60 },
-      { x: 1460, y: 380, w: 30, h: 90 },
-      { x: 1490, y: 350, w: 30, h: 120 }
-    ]
+      { x: 2720, y: 440, w: 30, h: 30 },
+      { x: 2750, y: 410, w: 30, h: 60 },
+      { x: 2780, y: 380, w: 30, h: 90 },
+      { x: 2810, y: 350, w: 30, h: 120 },
+      { x: 2840, y: 320, w: 30, h: 150 }
+    ],
+    movingBridges: [
+      { x: 650, y: 380, w: 128, h: 14, min: 580, max: 820, speed: 0.8, direction: 1 }
+    ],
+    bridgeGaps: [{ x: 560, w: 300 }]
   },
   { 
-    platforms: [[0, 470, 3200, 70], [260, 315, 150, 22], [540, 220, 130, 22], [810, 350, 130, 22], [1080, 260, 160, 22], [1390, 180, 150, 22], [1700, 320, 130, 22], [1980, 220, 170, 22], [2300, 340, 140, 22], [2570, 250, 170, 22]], 
-    coins: [[325, 270], [600, 175], [870, 305], [1140, 215], [1450, 135], [1760, 275], [2050, 175], [2370, 295], [2640, 205], [2950, 400]], 
-    mushrooms: [[600, 196], [1450, 156], [2370, 316]], 
-    clouds: [[600, 155], [1450, 115], [2370, 275]], 
-    saws: [[720, 450, 22], [1320, 450, 22], [1640, 450, 22], [2450, 450, 22], [2920, 450, 22]], 
-    cacti: [[900, 440, 28], [1850, 440, 28], [2700, 440, 28]], 
-    enemies: [[720, 438, 1.8, 660, 790], [970, 438, 2, 900, 1040], [1280, 438, 2.1, 1210, 1350], [2180, 438, 2.3, 2110, 2260]],
-    pits: [{ x: 1200, w: 160 }, { x: 2000, w: 150 }],
+    platforms: [[0, 470, 3200, 70], [260, 315, 150, 22], [1080, 260, 160, 22], [2300, 340, 140, 22]], 
+    coins: [[325, 270], [1140, 215], [2370, 295], [2950, 400]], 
+    clouds: [[600, 155], [2370, 275]], 
+    saws: [[720, 450, 22], [1640, 450, 22]], 
+    cacti: [[900, 440, 28], [2700, 440, 28]], 
+    enemies: [[720, 438, 1.8, 660, 790], [1280, 438, 2.1, 1210, 1350], [2180, 438, 2.3, 2110, 2260]],
+    pits: [{ x: 1200, w: 160 }],
     questionBoxes: [
-      { x: 1000, y: 220, content: 'mushroom' }
+      { x: 1000, y: 220, content: 'coin' }
     ],
     pipes: [
-      { x: 320, y: 400, w: 40, h: 70 }
+      { x: 320, y: 400, w: 40, h: 70, plant: false },
+      { x: 1800, y: 390, w: 40, h: 80, plant: true, staticPlant: false }
     ],
     stairs: [
-      { x: 1750, y: 440, w: 30, h: 30 },
-      { x: 1780, y: 410, w: 30, h: 60 },
-      { x: 1810, y: 380, w: 30, h: 90 }
-    ]
-  },
+      { x: 2750, y: 440, w: 30, h: 30 },
+      { x: 2780, y: 410, w: 30, h: 60 },
+      { x: 2810, y: 380, w: 30, h: 90 },
+      { x: 2840, y: 350, w: 30, h: 120 }
+    ],
+    movingBridges: [
+      { x: 700, y: 370, w: 128, h: 14, min: 600, max: 850, speed: 0.9, direction: 1 }
+    ],
+    bridgeGaps: [{ x: 580, w: 300 }]
+  }
 ];
 
+// Tạo tự động các màn từ 4 - 10
 for (let levelNumber = 4; levelNumber <= 10; levelNumber += 1) {
   const source = levelData[(levelNumber - 4) % 3];
   const difficulty = levelNumber - 3;
-  const extraHazards = Array.from({ length: Math.min(7, difficulty + 1) }, (_, index) => [360 + index * 420, 450, 22]);
-  const extraEnemies = Array.from({ length: Math.min(4, difficulty) }, (_, index) => [860 + index * 420, 438, 1.2 + difficulty * 0.18, 820 + index * 420, 910 + index * 420]);
+  const extraHazards = Array.from({ length: Math.min(4, difficulty) }, (_, index) => [500 + index * 550, 450, 22]);
+  const extraEnemies = Array.from({ length: Math.min(3, difficulty) }, (_, index) => [900 + index * 500, 438, 1.2 + difficulty * 0.15, 850 + index * 500, 950 + index * 500]);
+  
   levelData.push({
     platforms: source.platforms.map((platform) => [...platform]),
     coins: source.coins.map((coin) => [...coin]),
-    mushrooms: source.mushrooms.map((mushroom) => [...mushroom]),
     clouds: source.clouds.map((cloud) => [...cloud]),
     saws: [...source.saws.map((saw) => [...saw]), ...extraHazards],
-    cacti: Array.from({ length: Math.min(6, difficulty) }, (_, index) => [500 + index * 500, 440, 28]),
-    enemies: [...source.enemies.map(([x, y, speed, left, right]) => [x, y, speed + difficulty * 0.12, left, right]), ...extraEnemies],
+    cacti: Array.from({ length: Math.min(4, difficulty) }, (_, index) => [600 + index * 600, 440, 28]),
+    enemies: [...source.enemies.map(([x, y, speed, left, right]) => [x, y, speed + difficulty * 0.1, left, right]), ...extraEnemies],
     pits: source.pits || [],
     questionBoxes: source.questionBoxes || [],
-    pipes: source.pipes || [],
-    stairs: source.stairs || []
+    pipes: source.pipes.map(p => ({ ...p, plant: Math.random() < 0.5, staticPlant: Math.random() < 0.5 })),
+    stairs: source.stairs || [],
+    movingBridges: source.movingBridges.map(b => ({ ...b })),
+    bridgeGaps: source.bridgeGaps.map(g => ({ ...g }))
   });
 }
 
@@ -120,61 +139,80 @@ function loadLevel(index) {
   const data = levelData[index];
   platforms = data.platforms.map(([x, y, w, h]) => ({ x, y, w, h }));
   coins = data.coins.map(([x, y]) => ({ x, y, taken: false }));
-  mushrooms = data.mushrooms.map(([x, y]) => ({ x, y, taken: false, w: 32, h: 24 }));
-  clouds = data.clouds.map(([x, y]) => ({ x, y, revealed: false, content: Math.random() < 0.45 ? 'mushroom' : (Math.random() < 0.7 ? 'coin' : 'empty'), item: null }));
-  
+  clouds = data.clouds.map(([x, y]) => ({ x, y, revealed: false, content: 'coin', item: null }));
   pits = data.pits ? data.pits.map(p => ({ x: p.x, w: p.w, y: 470, h: 70 })) : [];
   questionBoxes = data.questionBoxes ? data.questionBoxes.map(b => ({ x: b.x, y: b.y, w: 32, h: 32, hit: false, content: b.content })) : [];
 
-  // Ý 4: Thêm Ống trụ & Bậc thang vào platforms để nhân vật di chuyển/đứng lên được
-  pipes = data.pipes ? data.pipes.map(p => ({ x: p.x, y: p.y, w: p.w, h: p.h })) : [];
+  pipes = data.pipes ? data.pipes.map(p => ({ 
+    x: p.x, y: p.y, w: p.w, h: p.h, 
+    plant: p.plant, 
+    staticPlant: p.staticPlant,
+    plantOffsetY: 0, 
+    plantTimer: Math.random() * 100 
+  })) : [];
+
   stairs = data.stairs ? data.stairs.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h })) : [];
   platforms.push(...pipes, ...stairs);
 
-  const towerX = 880 + (index % 4) * 90;
+  const towerX = 1100 + (index % 3) * 100;
   const towerPlatforms = [
     { x: towerX, y: 390, w: 150, h: 14 },
     { x: towerX + 170, y: 330, w: 150, h: 14 },
-    { x: towerX + 80, y: 270, w: 150, h: 14 },
-    { x: towerX + 250, y: 210, w: 150, h: 14 },
+    { x: towerX + 80, y: 270, w: 150, h: 14 }
   ];
   platforms.push(...towerPlatforms);
 
-  // Cầu di chuyển
-  movingBridges = [{ x: 540 + (index % 3) * 24, y: 395, w: 128, h: 14, min: 500, max: 760, speed: 0.7 + (index % 3) * 0.12, direction: 1 }];
-  if (index > 4) movingBridges.push({ x: 1740, y: 315, w: 108, h: 14, min: 1660, max: 1940, speed: 0.9, direction: -1 });
-  bridgeGaps = [{ x: 470, w: 390 }];
-  if (index > 4) bridgeGaps.push({ x: 1620, w: 380 });
+  // Ý 1: Cầu di chuyển hợp lý, thưa hơn
+  movingBridges = data.movingBridges ? data.movingBridges.map(b => ({ ...b })) : [];
+  bridgeGaps = data.bridgeGaps ? data.bridgeGaps.map(g => ({ ...g })) : [];
   platforms.push(...movingBridges);
 
-  // Ý 2: Loại bỏ quái vật xung quanh khu vực cầu qua sông (470px - 860px và 1600px - 2000px)
+  // Loại bỏ quái vật ở khu vực cầu di chuyển
   enemies = data.enemies
-    .filter(([x]) => !(x >= 450 && x <= 880) && !(x >= 1580 && x <= 2020))
+    .filter(([x]) => !bridgeGaps.some(gap => x >= gap.x - 30 && x <= gap.x + gap.w + 30))
     .map(([x, y, speed, left, right], enemyIndex) => { 
       const fastFactor = [0.72, 1.05, 1.42][(enemyIndex + index) % 3]; 
       const patrolExtra = (enemyIndex + index) % 2 ? 70 : 18; 
       return { x, y, w: 30, h: 32, speed: speed * fastFactor, left: Math.max(0, left - patrolExtra), right: Math.min(world.width - 50, right + patrolExtra) }; 
     });
 
-  // Ý 3: Số lượng lò xo quy định cụ thể và KHÔNG xuất hiện bên dưới cầu
-  let maxSprings = 1;
-  if (index >= 3 && index <= 5) maxSprings = 2; // Màn 4-6 có 2 lò xo
-  else if (index >= 6) maxSprings = 3; // Màn 7 trở lên có thể nhiều hơn 2
-
+  // Ý 1: Tuyệt đối KHÔNG bố trí lò xo dưới cầu hoặc khu vực cầu
   const potentialSpringSpots = [
+    { x: 380, y: 470 },
     { x: towerX + 30, y: 470 },
-    { x: towerX + 210, y: 330 },
-    { x: 2400, y: 470 }
+    { x: 2100, y: 470 },
+    { x: 2500, y: 470 }
   ];
-  
-  // Lọc vị trí đảm bảo không trùng với khu vực cầu di chuyển
+
   const safeSpringSpots = potentialSpringSpots.filter(spot => 
-    !bridgeGaps.some(gap => spot.x >= gap.x && spot.x <= gap.x + gap.w)
+    !bridgeGaps.some(gap => spot.x >= gap.x - 50 && spot.x <= gap.x + gap.w + 50) &&
+    !movingBridges.some(b => spot.x >= b.min - 50 && spot.x <= b.max + 50)
   );
+
+  let maxSprings = 1;
+  if (index >= 3 && index <= 5) maxSprings = 2;
+  else if (index >= 6) maxSprings = 3;
 
   springs = safeSpringSpots.slice(0, maxSprings).map(s => ({ x: s.x, y: s.y, bouncing: false }));
 
-  mushrooms.push({ x: towerX + 30, y: 220, taken: false, w: 32, h: 24, type: 'red' });
+  // Ý 2: Quy định chính xác số lượng và loại Nấm xuất hiện trên màn chơi
+  mushrooms = [];
+  if (index < 3) {
+    // Màn 1 - 3: 1 nấm đỏ, 1 nấm xanh
+    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
+    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'green' });
+  } else if (index >= 3 && index <= 6) {
+    // Màn 4 - 7: 1 nấm xanh, 2 nấm đỏ
+    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
+    mushrooms.push({ x: 1600, y: 350, taken: false, w: 32, h: 24, type: 'red' });
+    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'green' });
+  } else {
+    // Màn 8 trở đi: 3 nấm đỏ
+    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
+    mushrooms.push({ x: 1600, y: 350, taken: false, w: 32, h: 24, type: 'red' });
+    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'red' });
+  }
+
   saws = data.saws.map(([x, y, radius]) => ({ x, y, radius }));
   cacti = data.cacti.map(([x, y, radius]) => ({ x, y, radius }));
   snails = [{ x: 1000, y: 438, w: 34, h: 30, speed: 0.45, left: 920, right: 1100 }];
@@ -189,7 +227,6 @@ function startLevel() {
 function updateHud() { levelEl.textContent = String(levelIndex + 1).padStart(2, '0'); scoreEl.textContent = String(score).padStart(4, '0'); coinsEl.textContent = String(coinCount).padStart(2, '0'); mushroomsEl.textContent = String(mushroomCount).padStart(2, '0'); livesEl.textContent = String(lives).padStart(2, '0'); highJumpButton.textContent = `Nhảy cao (${highJumpsRemaining})`; runJumpButton.textContent = `Chạy + nhảy (${runJumpsRemaining})`; }
 function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 
-// Ý 5: Hiển thị chữ WIN khi qua màn
 function finish(title, nextLevel = false, death = false) { 
   if (gameOver) return; 
   gameOver = true; 
@@ -197,7 +234,7 @@ function finish(title, nextLevel = false, death = false) {
   document.getElementById('restart').textContent = nextLevel ? 'Màn tiếp theo' : 'Chơi lại'; 
   message.classList.remove('hidden'); 
   if (death) playGameOverMusic(); 
-  else playWinMusic(); // Ý 5: Nhạc chiến thắng
+  else playWinMusic(); 
 }
 
 function update(delta) {
@@ -213,8 +250,6 @@ function update(delta) {
   }
 
   movingBridges.forEach((bridge) => { bridge.x += bridge.speed * bridge.direction * delta / 16; if (bridge.x <= bridge.min || bridge.x >= bridge.max) bridge.direction *= -1; });
-  mushrooms.forEach((mushroom) => { if (mushroom.attachedBridge && !mushroom.taken) { mushroom.x = mushroom.attachedBridge.x + mushroom.attachedBridge.w / 2; mushroom.y = mushroom.attachedBridge.y - 14; } });
-  coins.forEach((coin) => { if (coin.attachedBridge && !coin.taken) { coin.x = coin.attachedBridge.x + coin.attachedBridge.w / 2; coin.y = coin.attachedBridge.y - 44; } });
 
   player.vy += 0.0018 * delta;
   const horizontalAcceleration = (player.greenBoost ? 0.0126 : 0.0105) * delta;
@@ -224,13 +259,33 @@ function update(delta) {
   player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx)); player.x += player.vx * delta; player.y += player.vy * delta;
   player.x = Math.max(0, Math.min(world.width - player.w, player.x)); player.grounded = false;
 
-  // Xử lý va chạm bệ đỡ, ống trụ, bậc thang
+  // Xử lý va chạm bệ đỡ & ống trụ & bậc thang
   platforms.forEach((platform) => { 
     const inPit = pits.some(p => player.x + player.w > p.x && player.x < p.x + p.w && platform.y === 470);
     const overGap = platform.y === 470 && (bridgeGaps.some((gap) => player.x + player.w > gap.x && player.x < gap.x + gap.w) || inPit); 
     if (!overGap && overlap(player, platform) && player.vy >= 0 && player.y + player.h - player.vy * delta <= platform.y + 8) { 
       player.y = platform.y - player.h; player.vy = 0; player.grounded = true; 
     } 
+  });
+
+  // Ý 3: Xử lý logic và va chạm cho Cây 2 lá dạng kéo (Piranha Plant) trên Ống trụ
+  pipes.forEach((pipe) => {
+    if (pipe.plant) {
+      if (!pipe.staticPlant) {
+        pipe.plantTimer += delta * 0.05;
+        pipe.plantOffsetY = Math.sin(pipe.plantTimer) * 28; // Trồi lên hạ xuống
+      } else {
+        pipe.plantOffsetY = 24; // Cố định
+      }
+
+      // Hitbox của cây kéo
+      const currentPlantY = pipe.y - Math.max(0, pipe.plantOffsetY);
+      const plantHitbox = { x: pipe.x + 4, y: currentPlantY - 20, w: 32, h: 24 };
+
+      if (overlap(player, plantHitbox)) {
+        handleObstacleHit();
+      }
+    }
   });
 
   // Hộp dấu hỏi (?)
@@ -240,13 +295,8 @@ function update(delta) {
         player.vy = 0.1;
         if (!box.hit) {
           box.hit = true;
-          if (box.content === 'coin') {
-            coinCount += 1; score += 50;
-            addEffect(box.x, box.y - 10, '+50 xu!', '#ffcf46');
-          } else if (box.content === 'mushroom') {
-            mushrooms.push({ x: box.x + 16, y: box.y - 20, taken: false, w: 32, h: 24, type: 'red' });
-            addEffect(box.x, box.y - 10, 'Nấm!', '#e54b45');
-          }
+          coinCount += 1; score += 50;
+          addEffect(box.x, box.y - 10, '+50 xu!', '#ffcf46');
           updateHud();
         }
       }
@@ -265,7 +315,7 @@ function update(delta) {
     } 
   });
 
-  // Rãnh hào tử thần
+  // Rãnh hào
   pits.forEach((pit) => {
     if (player.x + player.w > pit.x && player.x < pit.x + pit.w && player.y + player.h >= pit.y) {
       finish('Lọt xuống rãnh hào!', false, true);
@@ -274,6 +324,7 @@ function update(delta) {
 
   if (player.y > world.height + 80) finish('Rơi mất rồi!', false, true);
 
+  // Kẻ địch
   enemies.forEach((enemy) => { 
     enemy.x += enemy.speed * delta / 16; 
     if (enemy.x < enemy.left || enemy.x > enemy.right) enemy.speed *= -1; 
@@ -308,16 +359,13 @@ function update(delta) {
     const cloudHitbox = { x: cloud.x - 42, y: cloud.y - 18, w: 84, h: 32 }; 
     if (!cloud.revealed && player.vy < 0 && overlap(player, cloudHitbox)) { 
       cloud.revealed = true; 
-      if (cloud.content === 'mushroom' || cloud.content === 'coin') cloud.item = { x: cloud.x, y: cloud.y + 48, type: cloud.content, taken: false }; 
+      cloud.item = { x: cloud.x, y: cloud.y + 48, type: 'coin', taken: false }; 
     } 
     if (cloud.item && !cloud.item.taken && Math.abs(player.x + player.w / 2 - cloud.item.x) < 30 && Math.abs(player.y + player.h / 2 - cloud.item.y) < 42) { 
       cloud.item.taken = true; 
-      if (cloud.item.type === 'mushroom') collectMushroom(); 
-      else { 
-        coinCount += 1; score += 50; 
-        addEffect(cloud.item.x, cloud.item.y, '+50');
-        updateHud(); 
-      } 
+      coinCount += 1; score += 50; 
+      addEffect(cloud.item.x, cloud.item.y, '+50');
+      updateHud(); 
     } 
   });
 
@@ -343,7 +391,7 @@ function collectMushroom(type = 'red') {
   const feet = player.y + player.h; 
   mushroomCount += 1; lives += 1; score += 250; 
   player.eatEffectTimer = performance.now() + 600; 
-  addEffect(player.x, player.y - 20, 'LỚN LÊN! +250', '#54ad59');
+  addEffect(player.x, player.y - 20, type === 'green' ? 'TỐC ĐỘ! +250' : 'LỚN LÊN! +250', type === 'green' ? '#39b86b' : '#54ad59');
   
   if (type === 'green') player.greenBoost = true; 
   else { 
@@ -371,60 +419,20 @@ function handleObstacleHit() {
 }
 
 function drawMario(ctx, player) {
-  const x = player.x;
-  const y = player.y;
-  const w = player.w;
-  const h = player.h;
-
+  const x = player.x; const y = player.y; const w = player.w; const h = player.h;
   ctx.save();
-  if (player.face < 0) {
-    ctx.translate(x + w / 2, y + h / 2);
-    ctx.scale(-1, 1);
-    ctx.translate(-(x + w / 2), -(y + h / 2));
-  }
-
-  if (performance.now() < player.eatEffectTimer) {
-    if (Math.floor(performance.now() / 50) % 2 === 0) {
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#ffffff';
-    }
-  }
-
-  ctx.fillStyle = '#e52521';
-  ctx.fillRect(x + 2, y, w - 4, 8);
-  ctx.fillRect(x + 4, y - 2, w - 8, 2);
-  ctx.fillRect(x, y + 6, w, 3);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(x + w / 2, y + 4, 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#fcc082';
-  ctx.fillRect(x + 3, y + 9, w - 6, 9);
-
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(x + w - 8, y + 10, 2, 3);
-
-  ctx.fillStyle = '#fcc082';
-  ctx.fillRect(x + w - 5, y + 12, 5, 4);
-
-  ctx.fillStyle = '#4a2500';
-  ctx.fillRect(x + w - 9, y + 15, 8, 3);
-
-  ctx.fillStyle = '#e52521';
-  ctx.fillRect(x + 4, y + 18, w - 8, 4);
-
-  ctx.fillStyle = '#0020c2';
-  ctx.fillRect(x + 3, y + 21, w - 6, h - 26);
-
-  ctx.fillStyle = '#fcd800';
-  ctx.fillRect(x + 5, y + 22, 2, 2);
-
-  ctx.fillStyle = '#654321';
-  ctx.fillRect(x + 1, y + h - 5, 9, 5);
-  ctx.fillRect(x + w - 10, y + h - 5, 9, 5);
-
+  if (player.face < 0) { ctx.translate(x + w / 2, y + h / 2); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), -(y + h / 2)); }
+  if (performance.now() < player.eatEffectTimer) { if (Math.floor(performance.now() / 50) % 2 === 0) { ctx.shadowBlur = 15; ctx.shadowColor = '#ffffff'; } }
+  ctx.fillStyle = '#e52521'; ctx.fillRect(x + 2, y, w - 4, 8); ctx.fillRect(x + 4, y - 2, w - 8, 2); ctx.fillRect(x, y + 6, w, 3);
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x + w / 2, y + 4, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fcc082'; ctx.fillRect(x + 3, y + 9, w - 6, 9);
+  ctx.fillStyle = '#000000'; ctx.fillRect(x + w - 8, y + 10, 2, 3);
+  ctx.fillStyle = '#fcc082'; ctx.fillRect(x + w - 5, y + 12, 5, 4);
+  ctx.fillStyle = '#4a2500'; ctx.fillRect(x + w - 9, y + 15, 8, 3);
+  ctx.fillStyle = '#e52521'; ctx.fillRect(x + 4, y + 18, w - 8, 4);
+  ctx.fillStyle = '#0020c2'; ctx.fillRect(x + 3, y + 21, w - 6, h - 26);
+  ctx.fillStyle = '#fcd800'; ctx.fillRect(x + 5, y + 22, 2, 2);
+  ctx.fillStyle = '#654321'; ctx.fillRect(x + 1, y + h - 5, 9, 5); ctx.fillRect(x + w - 10, y + h - 5, 9, 5);
   ctx.restore();
 }
 
@@ -435,48 +443,67 @@ function draw() {
 
   platforms.forEach((platform) => { ctx.fillStyle = '#8b4e3c'; ctx.fillRect(platform.x, platform.y, platform.w, platform.h); ctx.fillStyle = '#54ad59'; ctx.fillRect(platform.x, platform.y, platform.w, 10); });
 
-  // Ý 4: Vẽ Ống Trụ màu xanh lá
+  // Ý 3: Vẽ Ống trụ & Cây 2 lá dạng kéo (Piranha Plant)
   pipes.forEach((pipe) => {
-    ctx.fillStyle = '#00a800';
-    ctx.fillRect(pipe.x, pipe.y, pipe.w, pipe.h);
-    ctx.fillStyle = '#00e800';
-    ctx.fillRect(pipe.x - 3, pipe.y, pipe.w + 6, 12);
-    ctx.strokeStyle = '#004800';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(pipe.x - 3, pipe.y, pipe.w + 6, 12);
+    ctx.fillStyle = '#00a800'; ctx.fillRect(pipe.x, pipe.y, pipe.w, pipe.h);
+    ctx.fillStyle = '#00e800'; ctx.fillRect(pipe.x - 3, pipe.y, pipe.w + 6, 12);
+    ctx.strokeStyle = '#004800'; ctx.lineWidth = 2; ctx.strokeRect(pipe.x - 3, pipe.y, pipe.w + 6, 12);
+
+    if (pipe.plant) {
+      const plantY = pipe.y - Math.max(0, pipe.plantOffsetY);
+      // Vẽ thân cây
+      ctx.fillStyle = '#008800';
+      ctx.fillRect(pipe.x + 16, plantY, 8, pipe.y - plantY);
+
+      // Vẽ lá dạng kéo (2 lá mọc đối diện xòe ra như chiếc kéo)
+      ctx.save();
+      ctx.translate(pipe.x + 20, plantY - 8);
+      
+      // Lá trái
+      ctx.fillStyle = '#44cc00';
+      ctx.beginPath();
+      ctx.ellipse(-10, -6, 12, 5, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lá phải
+      ctx.beginPath();
+      ctx.ellipse(10, -6, 12, 5, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Đầu cây / Miệng kéo
+      ctx.fillStyle = '#e52521';
+      ctx.beginPath();
+      ctx.arc(0, -10, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Vệt răng trắng
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-6, -12, 3, 4);
+      ctx.fillRect(3, -12, 3, 4);
+
+      ctx.restore();
+    }
   });
 
-  // Ý 4: Vẽ Bậc Thang
+  // Ý 4: Vẽ Bậc thang ở cuối màn
   stairs.forEach((stair) => {
-    ctx.fillStyle = '#b85c00';
-    ctx.fillRect(stair.x, stair.y, stair.w, stair.h);
-    ctx.strokeStyle = '#502800';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(stair.x, stair.y, stair.w, stair.h);
+    ctx.fillStyle = '#b85c00'; ctx.fillRect(stair.x, stair.y, stair.w, stair.h);
+    ctx.strokeStyle = '#502800'; ctx.lineWidth = 2; ctx.strokeRect(stair.x, stair.y, stair.w, stair.h);
   });
 
   pits.forEach((pit) => {
-    ctx.fillStyle = '#162b4d';
-    ctx.fillRect(pit.x, pit.y, pit.w, pit.h);
-    ctx.fillStyle = '#0a1424';
-    ctx.fillRect(pit.x, pit.y + 20, pit.w, pit.h - 20);
+    ctx.fillStyle = '#162b4d'; ctx.fillRect(pit.x, pit.y, pit.w, pit.h);
+    ctx.fillStyle = '#0a1424'; ctx.fillRect(pit.x, pit.y + 20, pit.w, pit.h - 20);
   });
 
   questionBoxes.forEach((box) => {
     if (box.hit) {
-      ctx.fillStyle = '#8f795d';
-      ctx.fillRect(box.x, box.y, box.w, box.h);
-      ctx.strokeStyle = '#524331';
-      ctx.strokeRect(box.x, box.y, box.w, box.h);
+      ctx.fillStyle = '#8f795d'; ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.strokeStyle = '#524331'; ctx.strokeRect(box.x, box.y, box.w, box.h);
     } else {
-      ctx.fillStyle = '#fca048';
-      ctx.fillRect(box.x, box.y, box.w, box.h);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(box.x + 2, box.y + 2, box.w - 4, box.h - 4);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('?', box.x + 10, box.y + 24);
+      ctx.fillStyle = '#fca048'; ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.strokeRect(box.x + 2, box.y + 2, box.w - 4, box.h - 4);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('?', box.x + 10, box.y + 24);
     }
   });
 
@@ -486,8 +513,11 @@ function draw() {
   springs.forEach((spring) => { const compressed = spring.bouncing && performance.now() % 420 < 120 ? 2 : 0; const baseY = spring.y + 1; const topY = spring.y - 17 + compressed; ctx.fillStyle = '#75452f'; ctx.fillRect(spring.x - 9, baseY, 18, 4); ctx.fillStyle = '#d28a4d'; ctx.fillRect(spring.x - 9, baseY - 2, 18, 3); ctx.fillStyle = '#e0e7ed'; ctx.fillRect(spring.x - 9, topY, 18, 4); ctx.strokeStyle = '#526477'; ctx.lineWidth = 1; ctx.strokeRect(spring.x - 9, topY, 18, 4); ctx.strokeStyle = '#394a5f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(spring.x - 6, baseY); ctx.lineTo(spring.x + 5, baseY - 4); ctx.lineTo(spring.x - 5, baseY - 7); ctx.lineTo(spring.x + 6, baseY - 11); ctx.lineTo(spring.x - 4, baseY - 14); ctx.lineTo(spring.x + 6, topY + 4); ctx.stroke(); });
 
   coins.forEach((coin) => { if (!coin.taken) { ctx.fillStyle = '#ffcf46'; ctx.beginPath(); ctx.arc(coin.x, coin.y, 13, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff0a0'; ctx.fillRect(coin.x - 2, coin.y - 8, 4, 16); } });
-  clouds.forEach((cloud) => { ctx.fillStyle = '#f6fbff'; ctx.beginPath(); ctx.arc(cloud.x - 25, cloud.y, 18, 0, Math.PI * 2); ctx.arc(cloud.x, cloud.y - 10, 25, 0, Math.PI * 2); ctx.arc(cloud.x + 28, cloud.y, 18, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#d9eef5'; ctx.fillRect(cloud.x - 42, cloud.y, 84, 13); if (cloud.item && !cloud.item.taken) { if (cloud.item.type === 'coin') { ctx.fillStyle = '#ffcf46'; ctx.beginPath(); ctx.arc(cloud.item.x, cloud.item.y, 13, 0, Math.PI * 2); ctx.fill(); } else { ctx.fillStyle = '#e54b45'; ctx.beginPath(); ctx.arc(cloud.item.x, cloud.item.y - 13, 16, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#f1a66d'; ctx.fillRect(cloud.item.x - 10, cloud.item.y - 13, 20, 13); } } });
+  clouds.forEach((cloud) => { ctx.fillStyle = '#f6fbff'; ctx.beginPath(); ctx.arc(cloud.x - 25, cloud.y, 18, 0, Math.PI * 2); ctx.arc(cloud.x, cloud.y - 10, 25, 0, Math.PI * 2); ctx.arc(cloud.x + 28, cloud.y, 18, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#d9eef5'; ctx.fillRect(cloud.x - 42, cloud.y, 84, 13); if (cloud.item && !cloud.item.taken) { ctx.fillStyle = '#ffcf46'; ctx.beginPath(); ctx.arc(cloud.item.x, cloud.item.y, 13, 0, Math.PI * 2); ctx.fill(); } });
+  
+  // Vẽ nấm đỏ / nấm xanh
   mushrooms.forEach((mushroom) => { if (!mushroom.taken) { const x = mushroom.x - mushroom.w / 2; const y = mushroom.y - mushroom.h; const green = mushroom.type === 'green'; ctx.fillStyle = green ? '#39b86b' : '#e54b45'; ctx.beginPath(); ctx.arc(mushroom.x, y + 11, 16, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#fff4d2'; ctx.fillRect(x + 3, y + 9, 8, 7); ctx.fillRect(x + 21, y + 9, 8, 7); ctx.fillStyle = '#f1a66d'; ctx.fillRect(x + 6, y + 11, 20, 13); ctx.fillStyle = '#18233f'; ctx.fillRect(x + 8, y + 19, 5, 5); ctx.fillRect(x + 19, y + 19, 5, 5); } });
+
   saws.forEach((saw) => { ctx.save(); ctx.translate(saw.x, saw.y); ctx.rotate(performance.now() / 500); ctx.fillStyle = '#d9e1e8'; ctx.beginPath(); for (let point = 0; point < 16; point += 1) { const angle = point * Math.PI / 8; const radius = point % 2 ? saw.radius - 6 : saw.radius; ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius); } ctx.closePath(); ctx.fill(); ctx.fillStyle = '#526477'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#17233f'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
   cacti.forEach((cactus) => { ctx.save(); ctx.translate(cactus.x, cactus.y); ctx.fillStyle = '#ba6f46'; ctx.fillRect(-22, 0, 44, 12); ctx.fillStyle = '#3f9b61'; ctx.fillRect(-11, -34, 22, 36); ctx.fillRect(-17, -25, 12, 10); ctx.fillRect(5, -18, 12, 10); ctx.fillStyle = '#f7c66a'; ctx.fillRect(-18, 4, 36, 5); ctx.strokeStyle = '#b9e58c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-5, -30); ctx.lineTo(-5, -4); ctx.moveTo(5, -30); ctx.lineTo(5, -4); ctx.stroke(); ctx.restore(); });
   drawFinishGoal();
@@ -519,7 +549,6 @@ function runJump() { if (runJumpsRemaining > 0 && player.grounded && !gameOver) 
 
 function playMusicNote(frequency, duration = 0.18) { if (!audioContext || !musicEnabled) return; const oscillator = audioContext.createOscillator(); const gain = audioContext.createGain(); oscillator.type = 'square'; oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.035, audioContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration); oscillator.connect(gain); gain.connect(audioContext.destination); oscillator.start(); oscillator.stop(audioContext.currentTime + duration); }
 
-// Ý 5: Nhạc chiến thắng khi qua màn
 function playWinMusic() {
   if (winMusicPlayed) return;
   winMusicPlayed = true;
