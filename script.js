@@ -1,13 +1,11 @@
 // ==========================================
-// 1. CẤU HÌNH CANVAS & BIẾN HỆ THỐNG
+// 1. CẤU HÌNH BẢN ĐỒ & TỌA ĐỘ
 // ==========================================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const GRAVITY = 0.5;
 
-// ==========================================
-// 2. NHÂN VẬT (PLAYER)
-// ==========================================
+// Nhân vật
 const player = {
   x: 30,
   y: 200,
@@ -36,14 +34,15 @@ window.addEventListener('keyup', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
 });
 
-// ==========================================
-// 3. KHỞI TẠO BẢN ĐỒ & ĐỐI TƯỢNG
-// ==========================================
+// BẢN ĐỒ:
 const ground = { x: 0, y: 300, width: 600, height: 50 };
-const upperBridge = { x: 320, y: 160, width: 180, height: 20 }; // Cầu lùi sang x=320
-const questionBlock = { x: 180, y: 120, width: 30, height: 30 };
 
-// Class Lò Xo: Đặt ở x=180 (vùng trống giữa màn, dưới khối hộp, không vướng cầu)
+// 1. CẦU TẦNG TRÊN: Dịch hẳn sang phải (x từ 360 -> 540)
+const upperBridge = { x: 360, y: 150, width: 180, height: 20 };
+
+// 2. LÒ XO + KHỐI HỘP: Đặt ở giữa màn (x = 180). Khoảng trời x: 0 -> 360 phía trên hoàn toàn trống
+const questionBlock = { x: 180, y: 110, width: 30, height: 30 };
+
 class Spring {
   constructor(x, y, width, height, bounceForce = -15) {
     this.x = x;
@@ -74,7 +73,6 @@ class Spring {
   }
 }
 
-// Class Ống Trụ: Va chạm cứng, bắt buộc nhảy lên trên, không đi xuyên
 class Pipe {
   constructor(x, y, width, height) {
     this.x = x;
@@ -108,18 +106,14 @@ class Pipe {
       let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
       if (minOverlap === overlapTop && p.vy >= 0) {
-        // Đứng trên đỉnh ống trụ
         p.y = this.y - p.height;
         p.vy = 0;
         p.isGrounded = true;
       } else if (minOverlap === overlapLeft) {
-        // Chặn va chạm bên trái
         p.x = this.x - p.width;
       } else if (minOverlap === overlapRight) {
-        // Chặn va chạm bên phải
         p.x = this.x + this.width;
       } else if (minOverlap === overlapBottom) {
-        // Chặn va chạm từ bên dưới
         p.y = this.y + this.height;
         p.vy = 0;
       }
@@ -128,10 +122,69 @@ class Pipe {
 }
 
 const spring = new Spring(180, 280, 30, 20, -15);
-const pipe = new Pipe(400, 220, 50, 80);
+const pipe = new Pipe(430, 220, 50, 80);
 
 // ==========================================
-// 4. VÒNG LẶP XỬ LÝ & VẼ (GAME LOOP)
+// 2. HÀM XỬ LÝ VA CHẠM CẦU (CHẶN NHẢY TỪ DƯỚI LÊN)
+// ==========================================
+function resolveBridgeCollision(p, bridge) {
+  if (
+    p.x < bridge.x + bridge.width &&
+    p.x + p.width > bridge.x &&
+    p.y < bridge.y + bridge.height &&
+    p.y + p.height > bridge.y
+  ) {
+    let overlapLeft = (p.x + p.width) - bridge.x;
+    let overlapRight = (bridge.x + bridge.width) - p.x;
+    let overlapTop = (p.y + p.height) - bridge.y;
+    let overlapBottom = (bridge.y + bridge.height) - p.y;
+
+    let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+    // 1. Nhảy từ trên xuống -> Đứng trên mặt cầu
+    if (minOverlap === overlapTop && p.vy >= 0) {
+      p.y = bridge.y - p.height;
+      p.vy = 0;
+      p.isGrounded = true;
+    } 
+    // 2. Nhảy từ dưới lên -> CHẶN LẠI (Cộc đầu vào đáy cầu, không cho đi xuyên)
+    else if (minOverlap === overlapBottom && p.vy < 0) {
+      p.y = bridge.y + bridge.height;
+      p.vy = 0; // Triệt tiêu lực nhảy, cho rơi xuống lại
+    } 
+    // 3. Va chạm hông cầu
+    else if (minOverlap === overlapLeft) {
+      p.x = bridge.x - p.width;
+    } else if (minOverlap === overlapRight) {
+      p.x = bridge.x + bridge.width;
+    }
+  }
+}
+
+// Va chạm khối hộp lơ lửng
+function resolveBlockCollision(p, block) {
+  if (
+    p.x < block.x + block.width &&
+    p.x + p.width > block.x &&
+    p.y < block.y + block.height &&
+    p.y + p.height > block.y
+  ) {
+    let overlapBottom = (block.y + block.height) - p.y;
+    let overlapTop = (p.y + p.height) - block.y;
+    
+    if (overlapBottom < overlapTop && p.vy < 0) {
+      p.y = block.y + block.height;
+      p.vy = 0;
+    } else if (overlapTop <= overlapBottom && p.vy >= 0) {
+      p.y = block.y - p.height;
+      p.vy = 0;
+      p.isGrounded = true;
+    }
+  }
+}
+
+// ==========================================
+// 3. VÒNG LẶP GAME (GAME LOOP)
 // ==========================================
 function update() {
   if (keys.right) player.vx = player.speed;
@@ -150,22 +203,13 @@ function update() {
     player.isGrounded = true;
   }
 
-  // Va chạm cầu trên
-  if (
-    player.x < upperBridge.x + upperBridge.width &&
-    player.x + player.width > upperBridge.x &&
-    player.y + player.height >= upperBridge.y &&
-    player.y + player.height <= upperBridge.y + 12 &&
-    player.vy >= 0
-  ) {
-    player.y = upperBridge.y - player.height;
-    player.vy = 0;
-    player.isGrounded = true;
-  }
-
-  // Xử lý logic Lò xo & Ống trụ
+  // Xử lý Lò xo & Ống trụ
   spring.checkBounce(player);
   pipe.resolveCollision(player);
+
+  // Xử lý va chạm Cầu & Khối hộp (Chặn xuyên 2 chiều)
+  resolveBridgeCollision(player, upperBridge);
+  resolveBlockCollision(player, questionBlock);
 
   if (player.x < 0) player.x = 0;
   if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
@@ -174,22 +218,26 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Vẽ đất & cầu
+  // Vẽ đất
   ctx.fillStyle = '#c84c0c';
   ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
+
+  // Vẽ Cầu (x = 360 -> 540)
   ctx.fillStyle = '#fcb438';
   ctx.fillRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
-
-  // Vẽ khối hộp
-  ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
   ctx.strokeStyle = '#000';
+  ctx.strokeRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
+
+  // Vẽ Khối hộp (x = 180)
+  ctx.fillStyle = '#fcb438';
+  ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
   ctx.strokeRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
 
-  // Vẽ các vật thể
+  // Vẽ Vật thể
   spring.draw();
   pipe.draw();
 
-  // Vẽ nhân vật
+  // Vẽ Player
   ctx.fillStyle = '#ff0000';
   ctx.fillRect(player.x, player.y, player.width, player.height);
 }
