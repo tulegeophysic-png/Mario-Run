@@ -16,12 +16,12 @@ const world = { width: 3200, height: 540, ground: 470 };
 
 let visualEffects = [];
 
-// Khởi tạo danh sách các màn chơi
+// Danh sách màn chơi với độ cao ống trụ (h) tùy chỉnh ngắn/dài khác nhau
 const levelData = [
   // MÀN 1
   { 
-    platforms: [[0, 470, 3200, 70], [420, 365, 180, 22], [1110, 390, 220, 22], [1940, 270, 190, 22]], 
-    coins: [[500, 320], [1160, 320], [2010, 215], [2700, 400]], 
+    platforms: [[0, 470, 3200, 70], [420, 365, 180, 22], [1110, 250, 220, 22], [1940, 260, 190, 22]], 
+    coins: [[500, 320], [1160, 195], [2010, 205], [2700, 400]], 
     clouds: [[930, 235], [2050, 205]], 
     saws: [[1000, 450, 22], [2600, 450, 22]], 
     cacti: [[1220, 440, 28]], 
@@ -29,8 +29,7 @@ const levelData = [
     pits: [],
     questionBoxes: [{ x: 350, y: 320, content: 'coin' }],
     pipes: [
-      { x: 400, y: 390, w: 40, h: 80, plant: false },
-      { x: 1800, y: 390, w: 40, h: 80, plant: false }
+      { x: 1060, h: 140, w: 40, plant: false } // Ống trụ cao vừa (140px)
     ],
     stairs: [
       { x: 2750, y: 440, w: 30, h: 30 },
@@ -43,17 +42,17 @@ const levelData = [
   },
   // MÀN 2
   { 
-    platforms: [[0, 470, 3200, 70], [300, 370, 170, 22], [1240, 250, 180, 22], [2200, 370, 150, 22]], 
-    coins: [[370, 325], [1320, 200], [2270, 325], [2900, 400]], 
+    platforms: [[0, 470, 3200, 70], [300, 370, 170, 22], [1240, 240, 180, 22], [2200, 250, 150, 22]], 
+    coins: [[370, 325], [1320, 185], [2270, 195], [2900, 400]], 
     clouds: [[680, 210], [1920, 220]], 
     saws: [[800, 450, 22], [2140, 450, 22]], 
     cacti: [[1040, 440, 28]], 
     enemies: [[800, 438, 1.5, 750, 860], [2390, 438, 2, 2320, 2470]],
     pits: [],
-    questionBoxes: [{ x: 1200, y: 310, content: 'coin' }],
+    questionBoxes: [{ x: 1200, y: 190, content: 'coin' }],
     pipes: [
-      { x: 450, y: 390, w: 40, h: 80, plant: false },
-      { x: 1500, y: 390, w: 40, h: 80, plant: false }
+      { x: 1190, h: 170, w: 40, plant: false }, // Ống trụ rất cao (170px)
+      { x: 2150, h: 85, w: 40, plant: false }   // Ống trụ ngắn (85px)
     ],
     stairs: [
       { x: 2720, y: 440, w: 30, h: 30 },
@@ -66,18 +65,17 @@ const levelData = [
   },
   // MÀN 3
   { 
-    platforms: [[0, 470, 3200, 70], [260, 315, 150, 22], [1080, 260, 160, 22], [2300, 340, 140, 22]], 
-    coins: [[325, 270], [1140, 215], [2370, 295], [2950, 400]], 
+    platforms: [[0, 470, 3200, 70], [260, 315, 150, 22], [1080, 230, 160, 22], [2300, 240, 140, 22]], 
+    coins: [[325, 270], [1140, 175], [2370, 185], [2950, 400]], 
     clouds: [[600, 155], [2370, 275]], 
     saws: [[1640, 450, 22]], 
     cacti: [[2700, 440, 28]], 
     enemies: [[2180, 438, 2.3, 2110, 2260]],
     pits: [{ x: 1200, w: 85 }],
-    questionBoxes: [{ x: 1000, y: 220, content: 'coin' }],
+    questionBoxes: [{ x: 1000, y: 180, content: 'coin' }],
     pipes: [
-      { x: 320, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
-      { x: 1800, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
-      { x: 2400, y: 390, w: 40, h: 80, plant: false }
+      { x: 1030, h: 180, w: 40, plant: true, staticPlant: false }, // Ống trụ cực cao có cây (180px)
+      { x: 2250, h: 100, w: 40, plant: false }                      // Ống trụ ngắn (100px)
     ],
     stairs: [
       { x: 2750, y: 440, w: 30, h: 30 },
@@ -90,32 +88,23 @@ const levelData = [
   }
 ];
 
-// Tạo tự động các màn từ 4 - 10
+// Tạo tự động các màn 4-10 với chiều cao ống trụ biến thiên ngẫu nhiên
 for (let levelNumber = 4; levelNumber <= 10; levelNumber += 1) {
-  const difficulty = levelNumber - 3;
-  const maxPipesWithPlants = levelNumber <= 6 ? 3 : Math.min(5, 3 + Math.floor(difficulty / 2));
+  const h1 = 110 + (levelNumber * 25) % 80; // Chiều cao biến thiên từ 110 - 190px
+  const h2 = 65 + (levelNumber * 35) % 60;  // Chiều cao biến thiên từ 65 - 125px
   
-  const doublePits = [
-    { x: 1100, w: 85 },
-    { x: 1255, w: 85 }
-  ];
-
   levelData.push({
-    platforms: [[0, 470, 3200, 70], [300, 360, 160, 22], [1400, 260, 160, 22], [2200, 350, 150, 22]],
-    coins: [[350, 310], [1450, 210], [2250, 300], [2900, 400]],
+    platforms: [[0, 470, 3200, 70], [300, 360, 160, 22], [1400, 230, 160, 22], [2200, 240, 150, 22]],
+    coins: [[350, 310], [1450, 175], [2250, 185], [2900, 400]],
     clouds: [[600, 180], [2000, 200]],
     saws: [[1800, 450, 22]],
     cacti: [[2600, 440, 28]],
     enemies: [[2100, 438, 1.5, 2000, 2200]],
-    pits: doublePits,
-    questionBoxes: [{ x: 1400, y: 210, content: 'coin' }],
+    pits: [{ x: 1100, w: 85 }, { x: 1255, w: 85 }],
+    questionBoxes: [{ x: 1400, y: 180, content: 'coin' }],
     pipes: [
-      { x: 450, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
-      { x: 900, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
-      { x: 1700, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 3, staticPlant: false },
-      { x: 2000, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 4, staticPlant: false },
-      { x: 2400, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 5, staticPlant: false },
-      { x: 2700, y: 390, w: 40, h: 80, plant: false }
+      { x: 1350, h: h1, w: 40, plant: true, staticPlant: false },
+      { x: 2150, h: h2, w: 40, plant: false }
     ],
     stairs: [
       { x: 2800, y: 440, w: 30, h: 30 },
@@ -145,23 +134,28 @@ function loadLevel(index) {
   pits = data.pits ? data.pits.map(p => ({ x: p.x, w: p.w, y: 470, h: 70 })) : [];
   questionBoxes = data.questionBoxes ? data.questionBoxes.map(b => ({ x: b.x, y: b.y, w: 32, h: 32, hit: false, content: b.content })) : [];
 
-  pipes = data.pipes ? data.pipes.map(p => ({ 
-    x: p.x, y: p.y, w: p.w, h: p.h, 
-    plant: p.plant, 
-    staticPlant: p.staticPlant,
-    plantOffsetY: 0, 
-    plantTimer: Math.random() * 100 
-  })) : [];
+  // Tự động tính tọa độ đỉnh y = 470 - h để đáy ống trụ luôn bám sát mặt đất
+  const rawPipes = data.pipes ? data.pipes.map(p => {
+    const pipeHeight = p.h || 120;
+    const pipeY = 470 - pipeHeight;
+    return { 
+      x: p.x, y: pipeY, w: p.w || 40, h: pipeHeight, 
+      plant: p.plant, 
+      staticPlant: p.staticPlant,
+      plantOffsetY: 0, 
+      plantTimer: Math.random() * 100 
+    };
+  }) : [];
+
+  // Chỉ giữ lại ống trụ nằm dưới cầu cao (y < 300) có phần thưởng phía trên
+  pipes = rawPipes.filter(pipe => {
+    const nearHighPlatform = platforms.some(plat => plat.y < 300 && Math.abs((plat.x + plat.w / 2) - pipe.x) < 250);
+    const nearReward = coins.some(c => Math.abs(c.x - pipe.x) < 250) || questionBoxes.some(b => Math.abs(b.x - pipe.x) < 250);
+    return nearHighPlatform && nearReward;
+  });
 
   stairs = data.stairs ? data.stairs.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h })) : [];
   
-  const towerX = 1100 + (index % 3) * 100;
-  const fixedBridgeY = 320; 
-  const fixedBridge = { x: towerX, y: fixedBridgeY, w: 160, h: 14 };
-  platforms.push(fixedBridge);
-
-  pipes.push({ x: towerX - 55, y: 390, w: 40, h: 80, plant: false });
-
   platforms.push(...pipes, ...stairs);
 
   movingBridges = data.movingBridges ? data.movingBridges.map(b => ({ ...b })) : [];
@@ -176,16 +170,17 @@ function loadLevel(index) {
       return { x, y, w: 30, h: 32, speed: speed * fastFactor, left: Math.max(0, left - patrolExtra), right: Math.min(world.width - 50, right + patrolExtra) }; 
     });
 
-  // Khởi tạo vị trí Nấm trên rất cao (đặt ở độ cao y: 180 ~ 220)
-  mushrooms = [];
-  mushrooms.push({ x: 750, y: 200, taken: false, w: 32, h: 24, type: 'red' });
-  
-  if (index >= 3) {
-    mushrooms.push({ x: 2150, y: 190, taken: false, w: 32, h: 24, type: 'green' });
-  }
+  mushrooms = [{ x: 480, y: 200, taken: false, w: 32, h: 24, type: 'red' }];
+  if (index >= 3) mushrooms.push({ x: 2150, y: 190, taken: false, w: 32, h: 24, type: 'green' });
 
-  // ĐẶT LÒ XO CHÍNH XÁC THẲNG HÀNG DƯỚI NẤM CAO
-  springs = mushrooms.map(m => ({ x: m.x, y: 470, bouncing: false }));
+  springs = [];
+  mushrooms.forEach(m => {
+    const gap = bridgeGaps.find(g => m.x >= g.x - 20 && m.x <= g.x + g.w + 20);
+    const pit = pits.find(p => m.x >= p.x - 20 && m.x <= p.x + p.w + 20);
+    if (gap) m.x = gap.x + gap.w + 50;
+    else if (pit) m.x = pit.x + pit.w + 50;
+    springs.push({ x: m.x, y: 470, bouncing: false });
+  });
 
   saws = data.saws.map(([x, y, radius]) => ({ x, y, radius }));
   cacti = data.cacti.map(([x, y, radius]) => ({ x, y, radius }));
@@ -253,9 +248,7 @@ function update(delta) {
       const currentPlantY = pipe.y - Math.max(0, pipe.plantOffsetY);
       const plantHitbox = { x: pipe.x + 4, y: currentPlantY - 18, w: 32, h: 22 };
 
-      if (overlap(player, plantHitbox)) {
-        handleObstacleHit();
-      }
+      if (overlap(player, plantHitbox)) handleObstacleHit();
     }
   });
 
@@ -264,8 +257,7 @@ function update(delta) {
       if (player.vy < 0 && player.y >= box.y + box.h - 10) {
         player.vy = 0.1;
         if (!box.hit) {
-          box.hit = true;
-          coinCount += 1; score += 50;
+          box.hit = true; coinCount += 1; score += 50;
           addEffect(box.x, box.y - 10, '+50 xu!', '#ffcf46');
           updateHud();
         }
@@ -273,18 +265,13 @@ function update(delta) {
     }
   });
 
-  // LOGIC LÒ XO: Bấm phím Nhảy (Space/Up/Jump) khi chạm lò xo sẽ bật cực cao chạm nấm
   springs.forEach((spring) => { 
     const item = { x: spring.x - 14, y: spring.y - 16, w: 28, h: 18 }; 
     if (overlap(player, item) && player.vy >= 0) { 
       player.y = spring.y - player.h - 2; 
-      
-      // Nếu đè giữ phím nhảy sẽ nảy cao cực đại (-1.32) vươn tới nấm trên trời
       const isJumping = heldKeys.has(' ') || heldKeys.has('ArrowUp');
       player.vy = isJumping ? -1.32 : -0.95; 
-      
-      player.grounded = false; 
-      spring.bouncing = true; 
+      player.grounded = false; spring.bouncing = true; 
       addEffect(spring.x, spring.y - 20, isJumping ? 'BẬT CAO!' : 'BOING!', '#ffdf77');
     } 
   });
@@ -334,8 +321,7 @@ function update(delta) {
       cloud.item = { x: cloud.x, y: cloud.y + 48, type: 'coin', taken: false }; 
     } 
     if (cloud.item && !cloud.item.taken && Math.abs(player.x + player.w / 2 - cloud.item.x) < 30 && Math.abs(player.y + player.h / 2 - cloud.item.y) < 42) { 
-      cloud.item.taken = true; 
-      coinCount += 1; score += 50; 
+      cloud.item.taken = true; coinCount += 1; score += 50; 
       addEffect(cloud.item.x, cloud.item.y, '+50');
       updateHud(); 
     } 
@@ -344,8 +330,7 @@ function update(delta) {
   mushrooms.forEach((mushroom) => { 
     const item = { x: mushroom.x - mushroom.w / 2, y: mushroom.y - mushroom.h, w: mushroom.w, h: mushroom.h }; 
     if (!mushroom.taken && overlap(player, item)) { 
-      mushroom.taken = true; 
-      collectMushroom(mushroom.type || 'red'); 
+      mushroom.taken = true; collectMushroom(mushroom.type || 'red'); 
     } 
   });
 
@@ -366,9 +351,7 @@ function collectMushroom(type = 'red') {
   addEffect(player.x, player.y - 20, type === 'green' ? 'TỐC ĐỘ! +250' : 'LỚN LÊN! +250', type === 'green' ? '#39b86b' : '#54ad59');
   
   if (type === 'green') player.greenBoost = true; 
-  else { 
-    player.redMushrooms += 1; player.big = true; player.w = 28; player.h = 46; player.y = feet - player.h; 
-  } 
+  else { player.redMushrooms += 1; player.big = true; player.w = 28; player.h = 46; player.y = feet - player.h; } 
   updateHud(); 
 }
 
@@ -384,9 +367,7 @@ function handleObstacleHit() {
   } else { 
     lives -= 1; updateHud(); 
     if (lives <= 0) finish('Ối! Game Over', false, true); 
-    else { 
-      player.x = Math.max(80, player.x - 120); player.vx = 0; player.blinkUntil = performance.now() + 1100; 
-    } 
+    else { player.x = Math.max(80, player.x - 120); player.vx = 0; player.blinkUntil = performance.now() + 1100; } 
   } 
 }
 
@@ -422,30 +403,12 @@ function draw() {
 
     if (pipe.plant) {
       const plantY = pipe.y - Math.max(0, pipe.plantOffsetY);
-      ctx.fillStyle = '#008800';
-      ctx.fillRect(pipe.x + 16, plantY, 8, pipe.y - plantY);
-
-      ctx.save();
-      ctx.translate(pipe.x + 20, plantY - 8);
-      
-      ctx.fillStyle = '#44cc00';
-      ctx.beginPath();
-      ctx.ellipse(-10, -6, 12, 5, -Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.ellipse(10, -6, 12, 5, Math.PI / 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#e52521';
-      ctx.beginPath();
-      ctx.arc(0, -10, 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-6, -12, 3, 4);
-      ctx.fillRect(3, -12, 3, 4);
-
+      ctx.fillStyle = '#008800'; ctx.fillRect(pipe.x + 16, plantY, 8, pipe.y - plantY);
+      ctx.save(); ctx.translate(pipe.x + 20, plantY - 8);
+      ctx.fillStyle = '#44cc00'; ctx.beginPath(); ctx.ellipse(-10, -6, 12, 5, -Math.PI / 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(10, -6, 12, 5, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e52521'; ctx.beginPath(); ctx.arc(0, -10, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(-6, -12, 3, 4); ctx.fillRect(3, -12, 3, 4);
       ctx.restore();
     }
   });
@@ -475,22 +438,14 @@ function draw() {
   
   bridgeGaps.forEach((gap) => { 
     ctx.fillStyle = '#1b4965'; ctx.fillRect(gap.x, 470, gap.w, 70); 
-    
     const waveOffset = (performance.now() * 0.05) % 40;
     ctx.fillStyle = '#62b6cb';
     for (let wx = gap.x - 20 + waveOffset; wx < gap.x + gap.w; wx += 35) {
-      if (wx >= gap.x && wx + 20 <= gap.x + gap.w) {
-        ctx.beginPath();
-        ctx.arc(wx + 10, 482, 10, Math.PI, 0);
-        ctx.fill();
-      }
+      if (wx >= gap.x && wx + 20 <= gap.x + gap.w) { ctx.beginPath(); ctx.arc(wx + 10, 482, 10, Math.PI, 0); ctx.fill(); }
     }
-    
     ctx.fillStyle = '#bee9e8';
     for (let wx = gap.x + 15 - waveOffset * 0.5; wx < gap.x + gap.w; wx += 45) {
-      if (wx >= gap.x && wx + 15 <= gap.x + gap.w) {
-        ctx.fillRect(wx, 500, 18, 3);
-      }
+      if (wx >= gap.x && wx + 15 <= gap.x + gap.w) { ctx.fillRect(wx, 500, 18, 3); }
     }
   });
 
@@ -508,17 +463,10 @@ function draw() {
   enemies.forEach((enemy) => { if (enemy.x > 0) { ctx.fillStyle = '#754342'; ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h); ctx.fillStyle = '#fff'; ctx.fillRect(enemy.x + 6, enemy.y + 8, 6, 8); ctx.fillRect(enemy.x + 19, enemy.y + 8, 6, 8); ctx.fillStyle = '#17233f'; ctx.fillRect(enemy.x + 8, enemy.y + 12, 3, 7); ctx.fillRect(enemy.x + 21, enemy.y + 12, 3, 7); } });
 
   const blinking = performance.now() < player.blinkUntil && Math.floor(performance.now() / 90) % 2 === 0; 
-  if (!blinking) { 
-    drawMario(ctx, player);
-  }
+  if (!blinking) drawMario(ctx, player);
 
   visualEffects.forEach((ef) => {
-    ctx.save();
-    ctx.globalAlpha = ef.alpha;
-    ctx.fillStyle = ef.color;
-    ctx.font = 'bold 16px sans-serif';
-    ctx.fillText(ef.text, ef.x, ef.y);
-    ctx.restore();
+    ctx.save(); ctx.globalAlpha = ef.alpha; ctx.fillStyle = ef.color; ctx.font = 'bold 16px sans-serif'; ctx.fillText(ef.text, ef.x, ef.y); ctx.restore();
   });
 
   ctx.restore();
@@ -534,26 +482,18 @@ function playMusicNote(frequency, duration = 0.18) { if (!audioContext || !music
 
 function playWinMusic() {
   if (winMusicPlayed) return;
-  winMusicPlayed = true;
-  if (musicEnabled) stopMusic();
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
-  audioContext = audioContext || new AudioContext();
-  audioContext.resume();
-  
+  winMusicPlayed = true; if (musicEnabled) stopMusic();
+  const AudioContext = window.AudioContext || window.webkitAudioContext; if (!AudioContext) return;
+  audioContext = audioContext || new AudioContext(); audioContext.resume();
   const winNotes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
   winNotes.forEach((frequency, index) => {
     window.setTimeout(() => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = 'triangle';
-      oscillator.frequency.value = frequency;
+      const oscillator = audioContext.createOscillator(); const gain = audioContext.createGain();
+      oscillator.type = 'triangle'; oscillator.frequency.value = frequency;
       gain.gain.setValueAtTime(0.08, audioContext.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25);
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.25);
+      oscillator.connect(gain); gain.connect(audioContext.destination);
+      oscillator.start(); oscillator.stop(audioContext.currentTime + 0.25);
     }, index * 120);
   });
 }
