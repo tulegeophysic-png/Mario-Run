@@ -18,77 +18,66 @@ let visualEffects = [];
 
 // Khởi tạo danh sách các màn chơi
 const levelData = [
+  // MÀN 1
   { 
     platforms: [[0, 470, 3200, 70], [420, 365, 180, 22], [1110, 390, 220, 22], [1940, 270, 190, 22]], 
     coins: [[500, 320], [1160, 320], [2010, 215], [2700, 400]], 
     clouds: [[930, 235], [2050, 205]], 
     saws: [[1000, 450, 22], [2600, 450, 22]], 
     cacti: [[1220, 440, 28]], 
-    enemies: [[1000, 438, 1.2, 950, 1080], [1380, 438, 1.3, 1330, 1480], [2200, 438, 1.5, 2150, 2280]],
-    pits: [{ x: 1300, w: 120 }],
-    questionBoxes: [
-      { x: 350, y: 320, content: 'coin' }
-    ],
-    // Ống trụ & Cây kéo (Piranha Plant)
+    enemies: [[1000, 438, 1.2, 950, 1080], [1380, 438, 1.3, 1330, 1480]],
+    pits: [],
+    questionBoxes: [{ x: 350, y: 320, content: 'coin' }],
     pipes: [
       { x: 400, y: 390, w: 40, h: 80, plant: false },
-      { x: 1100, y: 390, w: 40, h: 80, plant: true, staticPlant: false }, // Cây trồi lên hạ xuống
-      { x: 2200, y: 390, w: 40, h: 80, plant: true, staticPlant: true }   // Cây cố định
+      { x: 1800, y: 390, w: 40, h: 80, plant: false }
     ],
-    // Ý 4: Bậc thang chuyển hoàn toàn về cuối màn (gần cờ đích ở mốc ~2800px)
     stairs: [
       { x: 2750, y: 440, w: 30, h: 30 },
       { x: 2780, y: 410, w: 30, h: 60 },
       { x: 2810, y: 380, w: 30, h: 90 },
       { x: 2840, y: 350, w: 30, h: 120 }
     ],
-    // Ý 1: Cầu di chuyển bố trí thoáng, thưa hơn
-    movingBridges: [
-      { x: 600, y: 395, w: 128, h: 14, min: 540, max: 760, speed: 0.7, direction: 1 }
-    ],
+    movingBridges: [{ x: 600, y: 395, w: 128, h: 14, min: 540, max: 760, speed: 0.7, direction: 1 }],
     bridgeGaps: [{ x: 530, w: 260 }]
   },
+  // MÀN 2
   { 
     platforms: [[0, 470, 3200, 70], [300, 370, 170, 22], [1240, 250, 180, 22], [2200, 370, 150, 22]], 
     coins: [[370, 325], [1320, 200], [2270, 325], [2900, 400]], 
     clouds: [[680, 210], [1920, 220]], 
     saws: [[800, 450, 22], [2140, 450, 22]], 
-    cacti: [[1040, 440, 28], [2760, 440, 28]], 
-    enemies: [[800, 438, 1.5, 750, 860], [1120, 438, 1.7, 1060, 1210], [2390, 438, 2, 2320, 2470]],
-    pits: [{ x: 1000, w: 150 }],
-    questionBoxes: [
-      { x: 1200, y: 310, content: 'coin' }
-    ],
+    cacti: [[1040, 440, 28]], 
+    enemies: [[800, 438, 1.5, 750, 860], [2390, 438, 2, 2320, 2470]],
+    pits: [],
+    questionBoxes: [{ x: 1200, y: 310, content: 'coin' }],
     pipes: [
-      { x: 450, y: 390, w: 40, h: 80, plant: true, staticPlant: true },
+      { x: 450, y: 390, w: 40, h: 80, plant: false },
       { x: 1500, y: 390, w: 40, h: 80, plant: false }
     ],
     stairs: [
       { x: 2720, y: 440, w: 30, h: 30 },
       { x: 2750, y: 410, w: 30, h: 60 },
       { x: 2780, y: 380, w: 30, h: 90 },
-      { x: 2810, y: 350, w: 30, h: 120 },
-      { x: 2840, y: 320, w: 30, h: 150 }
+      { x: 2810, y: 350, w: 30, h: 120 }
     ],
-    movingBridges: [
-      { x: 650, y: 380, w: 128, h: 14, min: 580, max: 820, speed: 0.8, direction: 1 }
-    ],
+    movingBridges: [{ x: 650, y: 380, w: 128, h: 14, min: 580, max: 820, speed: 0.8, direction: 1 }],
     bridgeGaps: [{ x: 560, w: 300 }]
   },
+  // MÀN 3
   { 
     platforms: [[0, 470, 3200, 70], [260, 315, 150, 22], [1080, 260, 160, 22], [2300, 340, 140, 22]], 
     coins: [[325, 270], [1140, 215], [2370, 295], [2950, 400]], 
     clouds: [[600, 155], [2370, 275]], 
-    saws: [[720, 450, 22], [1640, 450, 22]], 
-    cacti: [[900, 440, 28], [2700, 440, 28]], 
-    enemies: [[720, 438, 1.8, 660, 790], [1280, 438, 2.1, 1210, 1350], [2180, 438, 2.3, 2110, 2260]],
-    pits: [{ x: 1200, w: 160 }],
-    questionBoxes: [
-      { x: 1000, y: 220, content: 'coin' }
-    ],
+    saws: [[1640, 450, 22]], 
+    cacti: [[2700, 440, 28]], 
+    enemies: [[2180, 438, 2.3, 2110, 2260]],
+    pits: [{ x: 1200, w: 85 }],
+    questionBoxes: [{ x: 1000, y: 220, content: 'coin' }],
     pipes: [
-      { x: 320, y: 400, w: 40, h: 70, plant: false },
-      { x: 1800, y: 390, w: 40, h: 80, plant: true, staticPlant: false }
+      { x: 320, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
+      { x: 1800, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
+      { x: 2400, y: 390, w: 40, h: 80, plant: false }
     ],
     stairs: [
       { x: 2750, y: 440, w: 30, h: 30 },
@@ -96,33 +85,46 @@ const levelData = [
       { x: 2810, y: 380, w: 30, h: 90 },
       { x: 2840, y: 350, w: 30, h: 120 }
     ],
-    movingBridges: [
-      { x: 700, y: 370, w: 128, h: 14, min: 600, max: 850, speed: 0.9, direction: 1 }
-    ],
+    movingBridges: [{ x: 700, y: 370, w: 128, h: 14, min: 600, max: 850, speed: 0.9, direction: 1 }],
     bridgeGaps: [{ x: 580, w: 300 }]
   }
 ];
 
 // Tạo tự động các màn từ 4 - 10
 for (let levelNumber = 4; levelNumber <= 10; levelNumber += 1) {
-  const source = levelData[(levelNumber - 4) % 3];
   const difficulty = levelNumber - 3;
-  const extraHazards = Array.from({ length: Math.min(4, difficulty) }, (_, index) => [500 + index * 550, 450, 22]);
-  const extraEnemies = Array.from({ length: Math.min(3, difficulty) }, (_, index) => [900 + index * 500, 438, 1.2 + difficulty * 0.15, 850 + index * 500, 950 + index * 500]);
+  const maxPipesWithPlants = levelNumber <= 6 ? 3 : Math.min(5, 3 + Math.floor(difficulty / 2));
   
+  const doublePits = [
+    { x: 1100, w: 85 },
+    { x: 1255, w: 85 }
+  ];
+
   levelData.push({
-    platforms: source.platforms.map((platform) => [...platform]),
-    coins: source.coins.map((coin) => [...coin]),
-    clouds: source.clouds.map((cloud) => [...cloud]),
-    saws: [...source.saws.map((saw) => [...saw]), ...extraHazards],
-    cacti: Array.from({ length: Math.min(4, difficulty) }, (_, index) => [600 + index * 600, 440, 28]),
-    enemies: [...source.enemies.map(([x, y, speed, left, right]) => [x, y, speed + difficulty * 0.1, left, right]), ...extraEnemies],
-    pits: source.pits || [],
-    questionBoxes: source.questionBoxes || [],
-    pipes: source.pipes.map(p => ({ ...p, plant: Math.random() < 0.5, staticPlant: Math.random() < 0.5 })),
-    stairs: source.stairs || [],
-    movingBridges: source.movingBridges.map(b => ({ ...b })),
-    bridgeGaps: source.bridgeGaps.map(g => ({ ...g }))
+    platforms: [[0, 470, 3200, 70], [300, 360, 160, 22], [1400, 260, 160, 22], [2200, 350, 150, 22]],
+    coins: [[350, 310], [1450, 210], [2250, 300], [2900, 400]],
+    clouds: [[600, 180], [2000, 200]],
+    saws: [[1800, 450, 22]],
+    cacti: [[2600, 440, 28]],
+    enemies: [[2100, 438, 1.5, 2000, 2200]],
+    pits: doublePits,
+    questionBoxes: [{ x: 1400, y: 210, content: 'coin' }],
+    pipes: [
+      { x: 450, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
+      { x: 900, y: 390, w: 40, h: 80, plant: true, staticPlant: false },
+      { x: 1700, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 3, staticPlant: false },
+      { x: 2000, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 4, staticPlant: false },
+      { x: 2400, y: 390, w: 40, h: 80, plant: maxPipesWithPlants >= 5, staticPlant: false },
+      { x: 2700, y: 390, w: 40, h: 80, plant: false }
+    ],
+    stairs: [
+      { x: 2800, y: 440, w: 30, h: 30 },
+      { x: 2830, y: 410, w: 30, h: 60 },
+      { x: 2860, y: 380, w: 30, h: 90 },
+      { x: 2890, y: 350, w: 30, h: 120 }
+    ],
+    movingBridges: [{ x: 650, y: 380, w: 128, h: 14, min: 580, max: 820, speed: 0.8, direction: 1 }],
+    bridgeGaps: [{ x: 560, w: 300 }]
   });
 }
 
@@ -152,22 +154,20 @@ function loadLevel(index) {
   })) : [];
 
   stairs = data.stairs ? data.stairs.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h })) : [];
+  
+  const towerX = 1100 + (index % 3) * 100;
+  const fixedBridgeY = 320; 
+  const fixedBridge = { x: towerX, y: fixedBridgeY, w: 160, h: 14 };
+  platforms.push(fixedBridge);
+
+  pipes.push({ x: towerX - 55, y: 390, w: 40, h: 80, plant: false });
+
   platforms.push(...pipes, ...stairs);
 
-  const towerX = 1100 + (index % 3) * 100;
-  const towerPlatforms = [
-    { x: towerX, y: 390, w: 150, h: 14 },
-    { x: towerX + 170, y: 330, w: 150, h: 14 },
-    { x: towerX + 80, y: 270, w: 150, h: 14 }
-  ];
-  platforms.push(...towerPlatforms);
-
-  // Ý 1: Cầu di chuyển hợp lý, thưa hơn
   movingBridges = data.movingBridges ? data.movingBridges.map(b => ({ ...b })) : [];
   bridgeGaps = data.bridgeGaps ? data.bridgeGaps.map(g => ({ ...g })) : [];
   platforms.push(...movingBridges);
 
-  // Loại bỏ quái vật ở khu vực cầu di chuyển
   enemies = data.enemies
     .filter(([x]) => !bridgeGaps.some(gap => x >= gap.x - 30 && x <= gap.x + gap.w + 30))
     .map(([x, y, speed, left, right], enemyIndex) => { 
@@ -176,46 +176,20 @@ function loadLevel(index) {
       return { x, y, w: 30, h: 32, speed: speed * fastFactor, left: Math.max(0, left - patrolExtra), right: Math.min(world.width - 50, right + patrolExtra) }; 
     });
 
-  // Ý 1: Tuyệt đối KHÔNG bố trí lò xo dưới cầu hoặc khu vực cầu
-  const potentialSpringSpots = [
-    { x: 380, y: 470 },
-    { x: towerX + 30, y: 470 },
-    { x: 2100, y: 470 },
-    { x: 2500, y: 470 }
-  ];
-
-  const safeSpringSpots = potentialSpringSpots.filter(spot => 
-    !bridgeGaps.some(gap => spot.x >= gap.x - 50 && spot.x <= gap.x + gap.w + 50) &&
-    !movingBridges.some(b => spot.x >= b.min - 50 && spot.x <= b.max + 50)
-  );
-
-  let maxSprings = 1;
-  if (index >= 3 && index <= 5) maxSprings = 2;
-  else if (index >= 6) maxSprings = 3;
-
-  springs = safeSpringSpots.slice(0, maxSprings).map(s => ({ x: s.x, y: s.y, bouncing: false }));
-
-  // Ý 2: Quy định chính xác số lượng và loại Nấm xuất hiện trên màn chơi
+  // Khởi tạo vị trí Nấm trên rất cao (đặt ở độ cao y: 180 ~ 220)
   mushrooms = [];
-  if (index < 3) {
-    // Màn 1 - 3: 1 nấm đỏ, 1 nấm xanh
-    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
-    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'green' });
-  } else if (index >= 3 && index <= 6) {
-    // Màn 4 - 7: 1 nấm xanh, 2 nấm đỏ
-    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
-    mushrooms.push({ x: 1600, y: 350, taken: false, w: 32, h: 24, type: 'red' });
-    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'green' });
-  } else {
-    // Màn 8 trở đi: 3 nấm đỏ
-    mushrooms.push({ x: 450, y: 350, taken: false, w: 32, h: 24, type: 'red' });
-    mushrooms.push({ x: 1600, y: 350, taken: false, w: 32, h: 24, type: 'red' });
-    mushrooms.push({ x: towerX + 30, y: 230, taken: false, w: 32, h: 24, type: 'red' });
+  mushrooms.push({ x: 750, y: 200, taken: false, w: 32, h: 24, type: 'red' });
+  
+  if (index >= 3) {
+    mushrooms.push({ x: 2150, y: 190, taken: false, w: 32, h: 24, type: 'green' });
   }
+
+  // ĐẶT LÒ XO CHÍNH XÁC THẲNG HÀNG DƯỚI NẤM CAO
+  springs = mushrooms.map(m => ({ x: m.x, y: 470, bouncing: false }));
 
   saws = data.saws.map(([x, y, radius]) => ({ x, y, radius }));
   cacti = data.cacti.map(([x, y, radius]) => ({ x, y, radius }));
-  snails = [{ x: 1000, y: 438, w: 34, h: 30, speed: 0.45, left: 920, right: 1100 }];
+  snails = [{ x: 2500, y: 438, w: 34, h: 30, speed: 0.45, left: 2420, right: 2600 }];
 }
 
 function resetGame() { levelIndex = 0; score = 0; coinCount = 0; mushroomCount = 0; lives = 1; startLevel(); }
@@ -259,7 +233,6 @@ function update(delta) {
   player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx)); player.x += player.vx * delta; player.y += player.vy * delta;
   player.x = Math.max(0, Math.min(world.width - player.w, player.x)); player.grounded = false;
 
-  // Xử lý va chạm bệ đỡ & ống trụ & bậc thang
   platforms.forEach((platform) => { 
     const inPit = pits.some(p => player.x + player.w > p.x && player.x < p.x + p.w && platform.y === 470);
     const overGap = platform.y === 470 && (bridgeGaps.some((gap) => player.x + player.w > gap.x && player.x < gap.x + gap.w) || inPit); 
@@ -268,19 +241,17 @@ function update(delta) {
     } 
   });
 
-  // Ý 3: Xử lý logic và va chạm cho Cây 2 lá dạng kéo (Piranha Plant) trên Ống trụ
   pipes.forEach((pipe) => {
     if (pipe.plant) {
       if (!pipe.staticPlant) {
-        pipe.plantTimer += delta * 0.05;
-        pipe.plantOffsetY = Math.sin(pipe.plantTimer) * 28; // Trồi lên hạ xuống
+        pipe.plantTimer += delta * 0.018; 
+        pipe.plantOffsetY = (Math.sin(pipe.plantTimer) + 1) * 16;
       } else {
-        pipe.plantOffsetY = 24; // Cố định
+        pipe.plantOffsetY = 24;
       }
 
-      // Hitbox của cây kéo
       const currentPlantY = pipe.y - Math.max(0, pipe.plantOffsetY);
-      const plantHitbox = { x: pipe.x + 4, y: currentPlantY - 20, w: 32, h: 24 };
+      const plantHitbox = { x: pipe.x + 4, y: currentPlantY - 18, w: 32, h: 22 };
 
       if (overlap(player, plantHitbox)) {
         handleObstacleHit();
@@ -288,7 +259,6 @@ function update(delta) {
     }
   });
 
-  // Hộp dấu hỏi (?)
   questionBoxes.forEach((box) => {
     if (overlap(player, box)) {
       if (player.vy < 0 && player.y >= box.y + box.h - 10) {
@@ -303,28 +273,30 @@ function update(delta) {
     }
   });
 
-  // Lò xo
+  // LOGIC LÒ XO: Bấm phím Nhảy (Space/Up/Jump) khi chạm lò xo sẽ bật cực cao chạm nấm
   springs.forEach((spring) => { 
     const item = { x: spring.x - 14, y: spring.y - 16, w: 28, h: 18 }; 
     if (overlap(player, item) && player.vy >= 0) { 
       player.y = spring.y - player.h - 2; 
-      player.vy = -1.05; 
+      
+      // Nếu đè giữ phím nhảy sẽ nảy cao cực đại (-1.32) vươn tới nấm trên trời
+      const isJumping = heldKeys.has(' ') || heldKeys.has('ArrowUp');
+      player.vy = isJumping ? -1.32 : -0.95; 
+      
       player.grounded = false; 
       spring.bouncing = true; 
-      addEffect(spring.x, spring.y - 20, 'BOING!', '#ffdf77');
+      addEffect(spring.x, spring.y - 20, isJumping ? 'BẬT CAO!' : 'BOING!', '#ffdf77');
     } 
   });
 
-  // Rãnh hào
   pits.forEach((pit) => {
-    if (player.x + player.w > pit.x && player.x < pit.x + pit.w && player.y + player.h >= pit.y) {
-      finish('Lọt xuống rãnh hào!', false, true);
+    if (player.x + player.w > pit.x + 4 && player.x < pit.x + pit.w - 4 && player.y + player.h >= pit.y + 12) {
+      finish('Lọt xuống hào đen!', false, true);
     }
   });
 
-  if (player.y > world.height + 80) finish('Rơi mất rồi!', false, true);
+  if (player.y > world.height + 80) finish('Rơi xuống sông!', false, true);
 
-  // Kẻ địch
   enemies.forEach((enemy) => { 
     enemy.x += enemy.speed * delta / 16; 
     if (enemy.x < enemy.left || enemy.x > enemy.right) enemy.speed *= -1; 
@@ -443,7 +415,6 @@ function draw() {
 
   platforms.forEach((platform) => { ctx.fillStyle = '#8b4e3c'; ctx.fillRect(platform.x, platform.y, platform.w, platform.h); ctx.fillStyle = '#54ad59'; ctx.fillRect(platform.x, platform.y, platform.w, 10); });
 
-  // Ý 3: Vẽ Ống trụ & Cây 2 lá dạng kéo (Piranha Plant)
   pipes.forEach((pipe) => {
     ctx.fillStyle = '#00a800'; ctx.fillRect(pipe.x, pipe.y, pipe.w, pipe.h);
     ctx.fillStyle = '#00e800'; ctx.fillRect(pipe.x - 3, pipe.y, pipe.w + 6, 12);
@@ -451,32 +422,26 @@ function draw() {
 
     if (pipe.plant) {
       const plantY = pipe.y - Math.max(0, pipe.plantOffsetY);
-      // Vẽ thân cây
       ctx.fillStyle = '#008800';
       ctx.fillRect(pipe.x + 16, plantY, 8, pipe.y - plantY);
 
-      // Vẽ lá dạng kéo (2 lá mọc đối diện xòe ra như chiếc kéo)
       ctx.save();
       ctx.translate(pipe.x + 20, plantY - 8);
       
-      // Lá trái
       ctx.fillStyle = '#44cc00';
       ctx.beginPath();
       ctx.ellipse(-10, -6, 12, 5, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Lá phải
       ctx.beginPath();
       ctx.ellipse(10, -6, 12, 5, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Đầu cây / Miệng kéo
       ctx.fillStyle = '#e52521';
       ctx.beginPath();
       ctx.arc(0, -10, 10, 0, Math.PI * 2);
       ctx.fill();
 
-      // Vệt răng trắng
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(-6, -12, 3, 4);
       ctx.fillRect(3, -12, 3, 4);
@@ -485,15 +450,14 @@ function draw() {
     }
   });
 
-  // Ý 4: Vẽ Bậc thang ở cuối màn
   stairs.forEach((stair) => {
     ctx.fillStyle = '#b85c00'; ctx.fillRect(stair.x, stair.y, stair.w, stair.h);
     ctx.strokeStyle = '#502800'; ctx.lineWidth = 2; ctx.strokeRect(stair.x, stair.y, stair.w, stair.h);
   });
 
   pits.forEach((pit) => {
-    ctx.fillStyle = '#162b4d'; ctx.fillRect(pit.x, pit.y, pit.w, pit.h);
-    ctx.fillStyle = '#0a1424'; ctx.fillRect(pit.x, pit.y + 20, pit.w, pit.h - 20);
+    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(pit.x, pit.y, pit.w, pit.h);
+    ctx.fillStyle = '#000000'; ctx.fillRect(pit.x + 2, pit.y + 10, pit.w - 4, pit.h - 10);
   });
 
   questionBoxes.forEach((box) => {
@@ -508,14 +472,33 @@ function draw() {
   });
 
   movingBridges.forEach((bridge) => { ctx.fillStyle = '#75452f'; ctx.fillRect(bridge.x, bridge.y + bridge.h - 2, bridge.w, 5); ctx.fillStyle = '#d28a4d'; ctx.fillRect(bridge.x, bridge.y, bridge.w, bridge.h); ctx.fillStyle = '#f0b66b'; ctx.fillRect(bridge.x + 5, bridge.y + 3, bridge.w - 10, 4); ctx.fillStyle = '#526477'; ctx.fillRect(bridge.x + 12, bridge.y + bridge.h, 4, 18); ctx.fillRect(bridge.x + bridge.w - 16, bridge.y + bridge.h, 4, 18); });
-  bridgeGaps.forEach((gap) => { ctx.fillStyle = '#245477'; ctx.fillRect(gap.x, 470, gap.w, 70); ctx.fillStyle = '#5eb8c3'; ctx.fillRect(gap.x + 20, 490, 44, 4); ctx.fillRect(gap.x + 140, 515, 58, 4); });
+  
+  bridgeGaps.forEach((gap) => { 
+    ctx.fillStyle = '#1b4965'; ctx.fillRect(gap.x, 470, gap.w, 70); 
+    
+    const waveOffset = (performance.now() * 0.05) % 40;
+    ctx.fillStyle = '#62b6cb';
+    for (let wx = gap.x - 20 + waveOffset; wx < gap.x + gap.w; wx += 35) {
+      if (wx >= gap.x && wx + 20 <= gap.x + gap.w) {
+        ctx.beginPath();
+        ctx.arc(wx + 10, 482, 10, Math.PI, 0);
+        ctx.fill();
+      }
+    }
+    
+    ctx.fillStyle = '#bee9e8';
+    for (let wx = gap.x + 15 - waveOffset * 0.5; wx < gap.x + gap.w; wx += 45) {
+      if (wx >= gap.x && wx + 15 <= gap.x + gap.w) {
+        ctx.fillRect(wx, 500, 18, 3);
+      }
+    }
+  });
 
   springs.forEach((spring) => { const compressed = spring.bouncing && performance.now() % 420 < 120 ? 2 : 0; const baseY = spring.y + 1; const topY = spring.y - 17 + compressed; ctx.fillStyle = '#75452f'; ctx.fillRect(spring.x - 9, baseY, 18, 4); ctx.fillStyle = '#d28a4d'; ctx.fillRect(spring.x - 9, baseY - 2, 18, 3); ctx.fillStyle = '#e0e7ed'; ctx.fillRect(spring.x - 9, topY, 18, 4); ctx.strokeStyle = '#526477'; ctx.lineWidth = 1; ctx.strokeRect(spring.x - 9, topY, 18, 4); ctx.strokeStyle = '#394a5f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(spring.x - 6, baseY); ctx.lineTo(spring.x + 5, baseY - 4); ctx.lineTo(spring.x - 5, baseY - 7); ctx.lineTo(spring.x + 6, baseY - 11); ctx.lineTo(spring.x - 4, baseY - 14); ctx.lineTo(spring.x + 6, topY + 4); ctx.stroke(); });
 
   coins.forEach((coin) => { if (!coin.taken) { ctx.fillStyle = '#ffcf46'; ctx.beginPath(); ctx.arc(coin.x, coin.y, 13, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff0a0'; ctx.fillRect(coin.x - 2, coin.y - 8, 4, 16); } });
   clouds.forEach((cloud) => { ctx.fillStyle = '#f6fbff'; ctx.beginPath(); ctx.arc(cloud.x - 25, cloud.y, 18, 0, Math.PI * 2); ctx.arc(cloud.x, cloud.y - 10, 25, 0, Math.PI * 2); ctx.arc(cloud.x + 28, cloud.y, 18, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#d9eef5'; ctx.fillRect(cloud.x - 42, cloud.y, 84, 13); if (cloud.item && !cloud.item.taken) { ctx.fillStyle = '#ffcf46'; ctx.beginPath(); ctx.arc(cloud.item.x, cloud.item.y, 13, 0, Math.PI * 2); ctx.fill(); } });
   
-  // Vẽ nấm đỏ / nấm xanh
   mushrooms.forEach((mushroom) => { if (!mushroom.taken) { const x = mushroom.x - mushroom.w / 2; const y = mushroom.y - mushroom.h; const green = mushroom.type === 'green'; ctx.fillStyle = green ? '#39b86b' : '#e54b45'; ctx.beginPath(); ctx.arc(mushroom.x, y + 11, 16, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#fff4d2'; ctx.fillRect(x + 3, y + 9, 8, 7); ctx.fillRect(x + 21, y + 9, 8, 7); ctx.fillStyle = '#f1a66d'; ctx.fillRect(x + 6, y + 11, 20, 13); ctx.fillStyle = '#18233f'; ctx.fillRect(x + 8, y + 19, 5, 5); ctx.fillRect(x + 19, y + 19, 5, 5); } });
 
   saws.forEach((saw) => { ctx.save(); ctx.translate(saw.x, saw.y); ctx.rotate(performance.now() / 500); ctx.fillStyle = '#d9e1e8'; ctx.beginPath(); for (let point = 0; point < 16; point += 1) { const angle = point * Math.PI / 8; const radius = point % 2 ? saw.radius - 6 : saw.radius; ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius); } ctx.closePath(); ctx.fill(); ctx.fillStyle = '#526477'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#17233f'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore(); });
