@@ -1,35 +1,12 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>Mario Game - Spring & Pipe Logic</title>
-  <style>
-    body {
-      margin: 0;
-      background: #222;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    canvas {
-      background: #5c94fc;
-      border: 2px solid #fff;
-    }
-  </style>
-</head>
-<body>
-
-<canvas id="gameCanvas" width="600" height="350"></canvas>
-
-<script>
+// ==========================================
+// 1. CẤU HÌNH CANVAS & BIẾN HỆ THỐNG
+// ==========================================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
 const GRAVITY = 0.5;
 
 // ==========================================
-// 1. DỮ LIỆU NHÂN VẬT (PLAYER)
+// 2. NHÂN VẬT (PLAYER)
 // ==========================================
 const player = {
   x: 30,
@@ -43,8 +20,7 @@ const player = {
   isGrounded: false
 };
 
-// Controls
-const keys = { right: false, left: false, up: false };
+const keys = { right: false, left: false };
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
@@ -61,19 +37,13 @@ window.addEventListener('keyup', (e) => {
 });
 
 // ==========================================
-// 2. KHỞI TẠO BẢN ĐỒ (MAP OBJECTS)
+// 3. KHỞI TẠO BẢN ĐỒ & ĐỐI TƯỢNG
 // ==========================================
-
-// Mặt đất chính (y = 300)
 const ground = { x: 0, y: 300, width: 600, height: 50 };
-
-// Cầu / Platform tầng trên (Đặt ở x = 320 -> Không che lò xo)
-const upperBridge = { x: 320, y: 160, width: 180, height: 20 };
-
-// Khối hộp lơ lửng ở giữa màn (x = 180)
+const upperBridge = { x: 320, y: 160, width: 180, height: 20 }; // Cầu lùi sang x=320
 const questionBlock = { x: 180, y: 120, width: 30, height: 30 };
 
-// LỜI GIẢI LÒ XO: Đặt tại x = 180, trên mặt đất (y = 280), ngay dưới Khối hộp
+// Class Lò Xo: Đặt ở x=180 (vùng trống giữa màn, dưới khối hộp, không vướng cầu)
 class Spring {
   constructor(x, y, width, height, bounceForce = -15) {
     this.x = x;
@@ -98,13 +68,13 @@ class Spring {
       p.y + p.height <= this.y + 12 &&
       p.vy > 0
     ) {
-      p.vy = this.bounceForce; // Bật vọt lên khoảng không trống
+      p.vy = this.bounceForce;
       p.isGrounded = false;
     }
   }
 }
 
-// LỜI GIẢI ỐNG TRỤ MARIO: Vật thể đặc, cản xuyên hoàn toàn
+// Class Ống Trụ: Va chạm cứng, bắt buộc nhảy lên trên, không đi xuyên
 class Pipe {
   constructor(x, y, width, height) {
     this.x = x;
@@ -114,13 +84,11 @@ class Pipe {
   }
 
   draw() {
-    // Thân ống
     ctx.fillStyle = '#00a800';
     ctx.fillRect(this.x, this.y, this.width, this.height);
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
     ctx.strokeRect(this.x, this.y, this.width, this.height);
-    // Vành ống
     ctx.fillRect(this.x - 4, this.y, this.width + 8, 16);
     ctx.strokeRect(this.x - 4, this.y, this.width + 8, 16);
   }
@@ -140,18 +108,18 @@ class Pipe {
       let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
       if (minOverlap === overlapTop && p.vy >= 0) {
-        // Đứng lên đỉnh ống trụ
+        // Đứng trên đỉnh ống trụ
         p.y = this.y - p.height;
         p.vy = 0;
         p.isGrounded = true;
       } else if (minOverlap === overlapLeft) {
-        // Bị cản bên trái (Không đi xuyên qua)
+        // Chặn va chạm bên trái
         p.x = this.x - p.width;
       } else if (minOverlap === overlapRight) {
-        // Bị cản bên phải (Không đi xuyên qua)
+        // Chặn va chạm bên phải
         p.x = this.x + this.width;
       } else if (minOverlap === overlapBottom) {
-        // Va đầu dưới đáy ống trụ
+        // Chặn va chạm từ bên dưới
         p.y = this.y + this.height;
         p.vy = 0;
       }
@@ -159,35 +127,30 @@ class Pipe {
   }
 }
 
-// Khởi tạo các đối tượng
 const spring = new Spring(180, 280, 30, 20, -15);
 const pipe = new Pipe(400, 220, 50, 80);
 
 // ==========================================
-// 3. VÒNG LẶP GAME (GAME LOOP)
+// 4. VÒNG LẶP XỬ LÝ & VẼ (GAME LOOP)
 // ==========================================
-
 function update() {
-  // Di chuyển ngang
   if (keys.right) player.vx = player.speed;
   else if (keys.left) player.vx = -player.speed;
   else player.vx = 0;
 
   player.x += player.vx;
-
-  // Trọng lực & Di chuyển dọc
   player.vy += GRAVITY;
   player.y += player.vy;
   player.isGrounded = false;
 
-  // Va chạm Mặt đất
+  // Va chạm mặt đất
   if (player.y + player.height >= ground.y) {
     player.y = ground.y - player.height;
     player.vy = 0;
     player.isGrounded = true;
   }
 
-  // Va chạm Cầu trên (Platforms)
+  // Va chạm cầu trên
   if (
     player.x < upperBridge.x + upperBridge.width &&
     player.x + player.width > upperBridge.x &&
@@ -200,11 +163,10 @@ function update() {
     player.isGrounded = true;
   }
 
-  // Va chạm Lò xo & Ống trụ
+  // Xử lý logic Lò xo & Ống trụ
   spring.checkBounce(player);
   pipe.resolveCollision(player);
 
-  // Giới hạn biên màn chơi
   if (player.x < 0) player.x = 0;
   if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 }
@@ -212,39 +174,30 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Vẽ mặt đất
+  // Vẽ đất & cầu
   ctx.fillStyle = '#c84c0c';
   ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
   ctx.fillStyle = '#fcb438';
-  ctx.fillRect(ground.x, ground.y, ground.width, 6);
-
-  // Vẽ Cầu trên
-  ctx.fillStyle = '#fcb438';
   ctx.fillRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
 
-  // Vẽ Khối hộp Question Block
-  ctx.fillStyle = '#fcb438';
+  // Vẽ khối hộp
   ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
   ctx.strokeStyle = '#000';
   ctx.strokeRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
 
-  // Vẽ Lò xo & Ống trụ
+  // Vẽ các vật thể
   spring.draw();
   pipe.draw();
 
-  // Vẽ Player (Mario)
+  // Vẽ nhân vật
   ctx.fillStyle = '#ff0000';
   ctx.fillRect(player.x, player.y, player.width, player.height);
 }
 
-function loop() {
+function gameLoop() {
   update();
   draw();
-  requestAnimationFrame(loop);
+  requestAnimationFrame(gameLoop);
 }
 
-loop();
-</script>
-
-</body>
-</html>
+gameLoop();

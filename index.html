@@ -1,65 +1,250 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Marrio Run</title>
-		<link rel="stylesheet" href="style.css" />
-	</head>
-	<body>
-		<main class="game-shell">
-			<header class="topbar">
-				<div>
-					<p class="eyebrow">PIXEL ADVENTURE 01</p>
-					<h1>Marrio <span>Run</span></h1>
-				</div>
-				<div class="stats" aria-live="polite">
-					<div><small>MÀN</small><strong id="level">01</strong></div>
-					<div><small>ĐIỂM</small><strong id="score">0000</strong></div>
-					<div><small>ĐỒNG XU</small><strong id="coins">00</strong></div>
-					<div><small>NẤM</small><strong id="mushrooms">00</strong></div>
-					<div><small>MẠNG</small><strong id="lives">01</strong></div>
-				</div>
-			</header>
+<head>
+  <meta charset="UTF-8">
+  <title>Mario Game - Spring & Pipe Logic</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #5c94fc;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
 
-			<section class="screen-wrap">
-				<canvas id="game" width="960" height="540" aria-label="Trò chơi Marrio Run"></canvas>
-				<div id="message" class="message hidden">
-					<p id="message-title">Hết lượt!</p>
-					<span>Nhấn <b>R</b> hoặc nút bên dưới để chơi lại</span>
-					<button id="restart" type="button">Chơi lại</button>
-				</div>
-			</section>
+<canvas id="gameCanvas" width="600" height="350"></canvas>
 
-			<footer class="controls">
-				<span><b>← →</b> di chuyển</span>
-				<span><b>SPACE</b> nhảy</span>
-				<span><b>Z</b> nhảy cao</span>
-				<span><b>X</b> chạy + nhảy</span>
-				<span><b>R</b> chơi lại</span>
-				<button id="music-toggle" type="button" aria-label="Bật hoặc tắt nhạc">♫ Nhạc: Tắt</button>
-				<button id="share-game" type="button" aria-label="Chia sẻ game">↗ Chia sẻ game</button>
-				<div class="touch-controls" aria-label="Điều khiển cảm ứng">
-					<button data-key="ArrowLeft" aria-label="Sang trái">←</button>
-					<button data-key="Space" aria-label="Nhảy">↑</button>
-					<button data-key="ArrowRight" aria-label="Sang phải">→</button>
-					<button data-action="highJump" aria-label="Nhảy cao">Nhảy cao</button>
-					<button data-action="runJump" aria-label="Chạy và nhảy">Chạy + nhảy</button>
-				</div>
-			<details class="how-to-play">
-				<summary>☰ Hướng dẫn chơi</summary>
-				<div class="guide-grid">
-					<p><b>Di chuyển:</b> giữ ← → để chạy, SPACE để nhảy.</p>
-					<p><b>Kỹ năng:</b> Z nhảy cao, X chạy + nhảy. Mỗi kỹ năng dùng 2 lần mỗi màn.</p>
-					<p><b>Lò xo:</b> dậm lên lò xo để bật cao gấp đôi và lấy nấm phía trên.</p>
-					<p><b>Nấm:</b> nấm đỏ giúp Mario lớn và tăng lực nhảy; nấm xanh giúp chạy nhanh.</p>
-					<p><b>Cầu di chuyển:</b> dùng cầu để vượt qua khoảng trống, xu và nấm sẽ đi cùng cầu.</p>
-					<p><b>Vật cản:</b> nhảy lên quái để hạ chúng; tránh răng cưa và xương rồng.</p>
-					<p><b>Mục tiêu:</b> đi đến cột cờ, kéo cờ xuống rồi vào cổng để sang màn tiếp theo.</p>
-				</div>
-			</details>
-			</footer>
-		</main>
-		<script src="script.js"></script>
-	</body>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const GRAVITY = 0.5;
+
+// ==========================================
+// 1. DỮ LIỆU NHÂN VẬT (PLAYER)
+// ==========================================
+const player = {
+  x: 30,
+  y: 200,
+  width: 24,
+  height: 32,
+  vx: 0,
+  vy: 0,
+  speed: 3,
+  jumpForce: -10,
+  isGrounded: false
+};
+
+// Controls
+const keys = { right: false, left: false, up: false };
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+  if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') && player.isGrounded) {
+    player.vy = player.jumpForce;
+    player.isGrounded = false;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+});
+
+// ==========================================
+// 2. KHỞI TẠO BẢN ĐỒ (MAP OBJECTS)
+// ==========================================
+
+// Mặt đất chính (y = 300)
+const ground = { x: 0, y: 300, width: 600, height: 50 };
+
+// Cầu / Platform tầng trên (Đặt ở x = 320 -> Không che lò xo)
+const upperBridge = { x: 320, y: 160, width: 180, height: 20 };
+
+// Khối hộp lơ lửng ở giữa màn (x = 180)
+const questionBlock = { x: 180, y: 120, width: 30, height: 30 };
+
+// LỜI GIẢI LÒ XO: Đặt tại x = 180, trên mặt đất (y = 280), ngay dưới Khối hộp
+class Spring {
+  constructor(x, y, width, height, bounceForce = -15) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.bounceForce = bounceForce;
+  }
+
+  draw() {
+    ctx.fillStyle = '#aaa';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = '#555';
+    ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 4);
+  }
+
+  checkBounce(p) {
+    if (
+      p.x < this.x + this.width &&
+      p.x + p.width > this.x &&
+      p.y + p.height >= this.y &&
+      p.y + p.height <= this.y + 12 &&
+      p.vy > 0
+    ) {
+      p.vy = this.bounceForce; // Bật vọt lên khoảng không trống
+      p.isGrounded = false;
+    }
+  }
+}
+
+// LỜI GIẢI ỐNG TRỤ MARIO: Vật thể đặc, cản xuyên hoàn toàn
+class Pipe {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  draw() {
+    // Thân ống
+    ctx.fillStyle = '#00a800';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+    // Vành ống
+    ctx.fillRect(this.x - 4, this.y, this.width + 8, 16);
+    ctx.strokeRect(this.x - 4, this.y, this.width + 8, 16);
+  }
+
+  resolveCollision(p) {
+    if (
+      p.x < this.x + this.width &&
+      p.x + p.width > this.x &&
+      p.y < this.y + this.height &&
+      p.y + p.height > this.y
+    ) {
+      let overlapLeft = (p.x + p.width) - this.x;
+      let overlapRight = (this.x + this.width) - p.x;
+      let overlapTop = (p.y + p.height) - this.y;
+      let overlapBottom = (this.y + this.height) - p.y;
+
+      let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+      if (minOverlap === overlapTop && p.vy >= 0) {
+        // Đứng lên đỉnh ống trụ
+        p.y = this.y - p.height;
+        p.vy = 0;
+        p.isGrounded = true;
+      } else if (minOverlap === overlapLeft) {
+        // Bị cản bên trái (Không đi xuyên qua)
+        p.x = this.x - p.width;
+      } else if (minOverlap === overlapRight) {
+        // Bị cản bên phải (Không đi xuyên qua)
+        p.x = this.x + this.width;
+      } else if (minOverlap === overlapBottom) {
+        // Va đầu dưới đáy ống trụ
+        p.y = this.y + this.height;
+        p.vy = 0;
+      }
+    }
+  }
+}
+
+// Khởi tạo các đối tượng
+const spring = new Spring(180, 280, 30, 20, -15);
+const pipe = new Pipe(400, 220, 50, 80);
+
+// ==========================================
+// 3. VÒNG LẶP GAME (GAME LOOP)
+// ==========================================
+
+function update() {
+  // Di chuyển ngang
+  if (keys.right) player.vx = player.speed;
+  else if (keys.left) player.vx = -player.speed;
+  else player.vx = 0;
+
+  player.x += player.vx;
+
+  // Trọng lực & Di chuyển dọc
+  player.vy += GRAVITY;
+  player.y += player.vy;
+  player.isGrounded = false;
+
+  // Va chạm Mặt đất
+  if (player.y + player.height >= ground.y) {
+    player.y = ground.y - player.height;
+    player.vy = 0;
+    player.isGrounded = true;
+  }
+
+  // Va chạm Cầu trên (Platforms)
+  if (
+    player.x < upperBridge.x + upperBridge.width &&
+    player.x + player.width > upperBridge.x &&
+    player.y + player.height >= upperBridge.y &&
+    player.y + player.height <= upperBridge.y + 12 &&
+    player.vy >= 0
+  ) {
+    player.y = upperBridge.y - player.height;
+    player.vy = 0;
+    player.isGrounded = true;
+  }
+
+  // Va chạm Lò xo & Ống trụ
+  spring.checkBounce(player);
+  pipe.resolveCollision(player);
+
+  // Giới hạn biên màn chơi
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Vẽ mặt đất
+  ctx.fillStyle = '#c84c0c';
+  ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
+  ctx.fillStyle = '#fcb438';
+  ctx.fillRect(ground.x, ground.y, ground.width, 6);
+
+  // Vẽ Cầu trên
+  ctx.fillStyle = '#fcb438';
+  ctx.fillRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
+
+  // Vẽ Khối hộp Question Block
+  ctx.fillStyle = '#fcb438';
+  ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
+  ctx.strokeStyle = '#000';
+  ctx.strokeRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
+
+  // Vẽ Lò xo & Ống trụ
+  spring.draw();
+  pipe.draw();
+
+  // Vẽ Player (Mario)
+  ctx.fillStyle = '#ff0000';
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
 </html>
