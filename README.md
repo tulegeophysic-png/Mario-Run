@@ -1,1 +1,1 @@
-mario run
+robot
