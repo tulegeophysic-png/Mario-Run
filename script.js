@@ -1,251 +1,185 @@
 // ==========================================
-// 1. CẤU HÌNH BẢN ĐỒ & TỌA ĐỘ
+// AURA BOT - LOGIC SIMULATION & DASHBOARD REALTIME
 // ==========================================
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const GRAVITY = 0.5;
 
-// Nhân vật
-const player = {
-  x: 30,
-  y: 200,
-  width: 24,
-  height: 32,
-  vx: 0,
-  vy: 0,
-  speed: 3,
-  jumpForce: -10,
-  isGrounded: false
+// Cấu hình tham số ngưỡng AI
+const CONFIG = {
+    SAFE_DISTANCE: 30.0, // cm
+    PM25_LIMIT_WARN: 50,
+    PM25_LIMIT_DANGER: 100,
+    CO2_LIMIT_WARN: 1200,
+    TEMP_LIMIT_HIGH: 35,
+    HUMIDITY_LIMIT_HIGH: 75
 };
 
-const keys = { right: false, left: false };
+// State khởi tạo
+let isRobotRunning = true;
 
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-  if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') && player.isGrounded) {
-    player.vy = player.jumpForce;
-    player.isGrounded = false;
-  }
-});
+// DOM Elements
+const elTemp = document.getElementById('val-temp');
+const elHumidity = document.getElementById('val-humidity');
+const elPm25 = document.getElementById('val-pm25');
+const elCo2 = document.getElementById('val-co2');
+const elDistance = document.getElementById('val-distance');
 
-window.addEventListener('keyup', (e) => {
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-});
+const elAiBadge = document.getElementById('ai-status-badge');
+const elWarningsList = document.getElementById('ai-warnings-list');
+const elRecommendList = document.getElementById('ai-recommendations-list');
+const elNavDecision = document.getElementById('nav-decision-text');
+const elLogConsole = document.getElementById('log-console');
 
-// BẢN ĐỒ:
-const ground = { x: 0, y: 300, width: 600, height: 50 };
-
-// 1. CẦU TẦNG TRÊN: Dịch hẳn sang phải (x từ 360 -> 540)
-const upperBridge = { x: 360, y: 150, width: 180, height: 20 };
-
-// 2. LÒ XO + KHỐI HỘP: Đặt ở giữa màn (x = 180). Khoảng trời x: 0 -> 360 phía trên hoàn toàn trống
-const questionBlock = { x: 180, y: 110, width: 30, height: 30 };
-
-class Spring {
-  constructor(x, y, width, height, bounceForce = -15) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.bounceForce = bounceForce;
-  }
-
-  draw() {
-    ctx.fillStyle = '#aaa';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.fillStyle = '#555';
-    ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 4);
-  }
-
-  checkBounce(p) {
-    if (
-      p.x < this.x + this.width &&
-      p.x + p.width > this.x &&
-      p.y + p.height >= this.y &&
-      p.y + p.height <= this.y + 12 &&
-      p.vy > 0
-    ) {
-      p.vy = this.bounceForce;
-      p.isGrounded = false;
-    }
-  }
-}
-
-class Pipe {
-  constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-
-  draw() {
-    ctx.fillStyle = '#00a800';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
-    ctx.fillRect(this.x - 4, this.y, this.width + 8, 16);
-    ctx.strokeRect(this.x - 4, this.y, this.width + 8, 16);
-  }
-
-  resolveCollision(p) {
-    if (
-      p.x < this.x + this.width &&
-      p.x + p.width > this.x &&
-      p.y < this.y + this.height &&
-      p.y + p.height > this.y
-    ) {
-      let overlapLeft = (p.x + p.width) - this.x;
-      let overlapRight = (this.x + this.width) - p.x;
-      let overlapTop = (p.y + p.height) - this.y;
-      let overlapBottom = (this.y + this.height) - p.y;
-
-      let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
-      if (minOverlap === overlapTop && p.vy >= 0) {
-        p.y = this.y - p.height;
-        p.vy = 0;
-        p.isGrounded = true;
-      } else if (minOverlap === overlapLeft) {
-        p.x = this.x - p.width;
-      } else if (minOverlap === overlapRight) {
-        p.x = this.x + this.width;
-      } else if (minOverlap === overlapBottom) {
-        p.y = this.y + this.height;
-        p.vy = 0;
-      }
-    }
-  }
-}
-
-const spring = new Spring(180, 280, 30, 20, -15);
-const pipe = new Pipe(430, 220, 50, 80);
+const btnAuto = document.getElementById('btn-auto');
+const btnStop = document.getElementById('btn-stop');
 
 // ==========================================
-// 2. HÀM XỬ LÝ VA CHẠM CẦU (CHẶN NHẢY TỪ DƯỚI LÊN)
+// 1. MÔ PHỎNG ĐỌC CẢM BIẾN (SENSOR ARRAY)
 // ==========================================
-function resolveBridgeCollision(p, bridge) {
-  if (
-    p.x < bridge.x + bridge.width &&
-    p.x + p.width > bridge.x &&
-    p.y < bridge.y + bridge.height &&
-    p.y + p.height > bridge.y
-  ) {
-    let overlapLeft = (p.x + p.width) - bridge.x;
-    let overlapRight = (bridge.x + bridge.width) - p.x;
-    let overlapTop = (p.y + p.height) - bridge.y;
-    let overlapBottom = (bridge.y + bridge.height) - p.y;
-
-    let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
-    // 1. Nhảy từ trên xuống -> Đứng trên mặt cầu
-    if (minOverlap === overlapTop && p.vy >= 0) {
-      p.y = bridge.y - p.height;
-      p.vy = 0;
-      p.isGrounded = true;
-    } 
-    // 2. Nhảy từ dưới lên -> CHẶN LẠI (Cộc đầu vào đáy cầu, không cho đi xuyên)
-    else if (minOverlap === overlapBottom && p.vy < 0) {
-      p.y = bridge.y + bridge.height;
-      p.vy = 0; // Triệt tiêu lực nhảy, cho rơi xuống lại
-    } 
-    // 3. Va chạm hông cầu
-    else if (minOverlap === overlapLeft) {
-      p.x = bridge.x - p.width;
-    } else if (minOverlap === overlapRight) {
-      p.x = bridge.x + bridge.width;
-    }
-  }
+function readSensors() {
+    return {
+        temperature: (Math.random() * (38 - 20) + 20).toFixed(1),
+        humidity: (Math.random() * (85 - 40) + 40).toFixed(1),
+        pm25: (Math.random() * (150 - 10) + 10).toFixed(1),
+        co2: (Math.random() * (1600 - 400) + 400).toFixed(0),
+        distance: (Math.random() * (200 - 10) + 10).toFixed(1)
+    };
 }
 
-// Va chạm khối hộp lơ lửng
-function resolveBlockCollision(p, block) {
-  if (
-    p.x < block.x + block.width &&
-    p.x + p.width > block.x &&
-    p.y < block.y + block.height &&
-    p.y + p.height > block.y
-  ) {
-    let overlapBottom = (block.y + block.height) - p.y;
-    let overlapTop = (p.y + p.height) - block.y;
+// ==========================================
+// 2. KHỐI AI PHÂN TÍCH MÔI TRƯỜNG
+// ==========================================
+function analyzeEnvironment(data) {
+    let warnings = [];
+    let recommendations = [];
+    let status = "AN TOÀN";
+    let statusClass = "safe";
+
+    // Phân tích PM2.5
+    if (data.pm25 > CONFIG.PM25_LIMIT_DANGER) {
+        status = "NGUY HIỂM";
+        statusClass = "danger";
+        warnings.push(`PM2.5 rất cao (${data.pm25} µg/m³)!`);
+        recommendations.push("Bật máy lọc không khí tối đa & đeo khẩu trang N95.");
+    } else if (data.pm25 > CONFIG.PM25_LIMIT_WARN) {
+        if (status !== "NGUY HIỂM") { status = "CẢNH BÁO"; statusClass = "warning"; }
+        warnings.push(`PM2.5 vượt ngưỡng (${data.pm25} µg/m³).`);
+        recommendations.push("Nên đóng cửa sổ và bật lọc không khí.");
+    }
+
+    // Phân tích CO2
+    if (data.co2 > CONFIG.CO2_LIMIT_WARN) {
+        if (status !== "NGUY HIỂM") { status = "CẢNH BÁO"; statusClass = "warning"; }
+        warnings.push(`Khí CO₂ cao (${data.co2} ppm).`);
+        recommendations.push("Không khí bí, hãy mở cửa thông gió.");
+    }
+
+    // Phân tích Nhiệt độ & Độ ẩm
+    if (data.temperature > CONFIG.TEMP_LIMIT_HIGH) {
+        warnings.push(`Nhiệt độ cao (${data.temperature}°C).`);
+        recommendations.push("Bật điều hòa/quạt tránh sốc nhiệt.");
+    }
+    if (data.humidity > CONFIG.HUMIDITY_LIMIT_HIGH) {
+        warnings.push(`Độ ẩm cao (${data.humidity}%).`);
+        recommendations.push("Bật chế độ hút ẩm (Dry) chống mốc.");
+    }
+
+    if (warnings.length === 0) {
+        recommendations.push("Môi trường đạt chuẩn lý tưởng!");
+    }
+
+    return { status, statusClass, warnings, recommendations };
+}
+
+// ==========================================
+// 3. KHỐI QUYẾT ĐỊNH DI CHUYỂN
+// ==========================================
+function makeNavigationDecision(distance) {
+    if (parseFloat(distance) < CONFIG.SAFE_DISTANCE) {
+        const actions = ["Lùi lại & rẽ trái 90°", "Lùi lại & rẽ phải 90°", "Xoay tại chỗ 180°"];
+        const randomAction = actions[Math.floor(Math.random() * actions.length)];
+        return {
+            text: `🛑 Vật cản gần (${distance}cm) ➔ ${randomAction}`,
+            isObstacle: true
+        };
+    }
+    return {
+        text: `🟢 Đường thông thoáng (${distance}cm) ➔ Tiến về phía trước`,
+        isObstacle: false
+    };
+}
+
+// ==========================================
+// 4. HIỂN THỊ DỮ LIỆU & LOGS
+// ==========================================
+function addLog(message, type = "info") {
+    const timeStr = new Date().toLocaleTimeString();
+    const logItem = document.createElement('p');
+    logItem.className = `log-item ${type}`;
+    logItem.textContent = `[${timeStr}] ${message}`;
     
-    if (overlapBottom < overlapTop && p.vy < 0) {
-      p.y = block.y + block.height;
-      p.vy = 0;
-    } else if (overlapTop <= overlapBottom && p.vy >= 0) {
-      p.y = block.y - p.height;
-      p.vy = 0;
-      p.isGrounded = true;
+    elLogConsole.appendChild(logItem);
+    elLogConsole.scrollTop = elLogConsole.scrollHeight; // Auto scroll
+}
+
+function updateUI(data, aiResult, navResult) {
+    // 1. Cập nhật chỉ số cảm biến
+    elTemp.textContent = data.temperature;
+    elHumidity.textContent = data.humidity;
+    elPm25.textContent = data.pm25;
+    elCo2.textContent = data.co2;
+    elDistance.textContent = data.distance;
+
+    // 2. Cập nhật AI Status & Khuyến nghị
+    elAiBadge.textContent = aiResult.status;
+    elAiBadge.className = `badge ${aiResult.statusClass}`;
+
+    elWarningsList.innerHTML = aiResult.warnings.length > 0 
+        ? aiResult.warnings.map(w => `<li>• ${w}</li>`).join('')
+        : '<li>• Không có cảnh báo</li>';
+
+    elRecommendList.innerHTML = aiResult.recommendations
+        .map(r => `<li>• ${r}</li>`).join('');
+
+    // 3. Cập nhật di chuyển
+    elNavDecision.textContent = navResult.text;
+
+    // 4. Ghi Log
+    addLog(`Telemetry Sent: T=${data.temperature}°C, PM2.5=${data.pm25}, Status=${aiResult.status}`, 
+        aiResult.statusClass === 'danger' ? 'danger' : (aiResult.statusClass === 'warning' ? 'warn' : 'info'));
+}
+
+// ==========================================
+// 5. CHU KỲ HOẠT ĐỘNG CHÍNH (MAIN LOOP)
+// ==========================================
+function runRobotCycle() {
+    if (!isRobotRunning) return;
+
+    const sensorData = readSensors();
+    const aiAnalysis = analyzeEnvironment(sensorData);
+    const navDecision = makeNavigationDecision(sensorData.distance);
+
+    updateUI(sensorData, aiAnalysis, navDecision);
+}
+
+// Lập lịch tự động cập nhật mỗi 2.5 giây
+let cycleInterval = setInterval(runRobotCycle, 2500);
+
+// Nút bấm điều khiển
+btnStop.addEventListener('click', () => {
+    isRobotRunning = false;
+    document.getElementById('robot-state-text').textContent = "Đã dừng";
+    document.querySelector('.status-indicator').classList.remove('online');
+    addLog("[COMMAND] Robot đã tạm dừng hoạt động thủ công.", "warn");
+});
+
+btnAuto.addEventListener('click', () => {
+    if (!isRobotRunning) {
+        isRobotRunning = true;
+        document.getElementById('robot-state-text').textContent = "Đang hoạt động";
+        document.querySelector('.status-indicator').classList.add('online');
+        addLog("[COMMAND] Khởi động lại chế độ tự hành.", "info");
+        runRobotCycle();
     }
-  }
-}
+});
 
-// ==========================================
-// 3. VÒNG LẶP GAME (GAME LOOP)
-// ==========================================
-function update() {
-  if (keys.right) player.vx = player.speed;
-  else if (keys.left) player.vx = -player.speed;
-  else player.vx = 0;
-
-  player.x += player.vx;
-  player.vy += GRAVITY;
-  player.y += player.vy;
-  player.isGrounded = false;
-
-  // Va chạm mặt đất
-  if (player.y + player.height >= ground.y) {
-    player.y = ground.y - player.height;
-    player.vy = 0;
-    player.isGrounded = true;
-  }
-
-  // Xử lý Lò xo & Ống trụ
-  spring.checkBounce(player);
-  pipe.resolveCollision(player);
-
-  // Xử lý va chạm Cầu & Khối hộp (Chặn xuyên 2 chiều)
-  resolveBridgeCollision(player, upperBridge);
-  resolveBlockCollision(player, questionBlock);
-
-  if (player.x < 0) player.x = 0;
-  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Vẽ đất
-  ctx.fillStyle = '#c84c0c';
-  ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
-
-  // Vẽ Cầu (x = 360 -> 540)
-  ctx.fillStyle = '#fcb438';
-  ctx.fillRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
-  ctx.strokeStyle = '#000';
-  ctx.strokeRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
-
-  // Vẽ Khối hộp (x = 180)
-  ctx.fillStyle = '#fcb438';
-  ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
-  ctx.strokeRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
-
-  // Vẽ Vật thể
-  spring.draw();
-  pipe.draw();
-
-  // Vẽ Player
-  ctx.fillStyle = '#ff0000';
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-}
-
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+// Chạy chu kỳ đầu tiên ngay khi tải trang
+runRobotCycle();

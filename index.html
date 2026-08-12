@@ -1,250 +1,114 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Mario Game - Spring & Pipe Logic</title>
-  <style>
-    body {
-      margin: 0;
-      background: #222;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    canvas {
-      background: #5c94fc;
-      border: 2px solid #fff;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraBot - Dashboard Giám Sát Robot Tự Hành</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-robot"></i>
+                <h1>AuraBot <span>Dashboard</span></h1>
+            </div>
+            <div class="robot-status">
+                <span class="status-indicator online"></span>
+                <span id="robot-state-text">Đang hoạt động</span>
+            </div>
+        </header>
 
-<canvas id="gameCanvas" width="600" height="350"></canvas>
+        <main class="dashboard-grid">
+            
+            <section class="card metrics-section">
+                <h2><i class="fa-solid fa-gauge-high"></i> Thông Số Cảm Biến Real-time</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <i class="fa-solid fa-temperature-half icon temp"></i>
+                        <div class="metric-info">
+                            <label>Nhiệt độ</label>
+                            <span class="value" id="val-temp">--</span> <span class="unit">°C</span>
+                        </div>
+                    </div>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+                    <div class="metric-card">
+                        <i class="fa-solid fa-droplet icon humidity"></i>
+                        <div class="metric-info">
+                            <label>Độ ẩm</label>
+                            <span class="value" id="val-humidity">--</span> <span class="unit">%</span>
+                        </div>
+                    </div>
 
-const GRAVITY = 0.5;
+                    <div class="metric-card">
+                        <i class="fa-solid fa-smog icon pm25"></i>
+                        <div class="metric-info">
+                            <label>Bụi mịn PM2.5</label>
+                            <span class="value" id="val-pm25">--</span> <span class="unit">µg/m³</span>
+                        </div>
+                    </div>
 
-// ==========================================
-// 1. DỮ LIỆU NHÂN VẬT (PLAYER)
-// ==========================================
-const player = {
-  x: 30,
-  y: 200,
-  width: 24,
-  height: 32,
-  vx: 0,
-  vy: 0,
-  speed: 3,
-  jumpForce: -10,
-  isGrounded: false
-};
+                    <div class="metric-card">
+                        <i class="fa-solid fa-wind icon co2"></i>
+                        <div class="metric-info">
+                            <label>Khí CO₂</label>
+                            <span class="value" id="val-co2">--</span> <span class="unit">ppm</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-// Controls
-const keys = { right: false, left: false, up: false };
+            <section class="card ai-section">
+                <h2><i class="fa-solid fa-brain"></i> AI Phân Tích & Khuyến Nghị</h2>
+                <div class="ai-status-box" id="ai-status-container">
+                    <span class="badge" id="ai-status-badge">Đang quét...</span>
+                </div>
+                
+                <div class="ai-details">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo môi trường</h3>
+                    <ul id="ai-warnings-list" class="warning-list">
+                        <li>Đang tải dữ liệu...</li>
+                    </ul>
 
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-  if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') && player.isGrounded) {
-    player.vy = player.jumpForce;
-    player.isGrounded = false;
-  }
-});
+                    <h3><i class="fa-solid fa-lightbulb"></i> Khuyến nghị sức khỏe</h3>
+                    <ul id="ai-recommendations-list" class="recommend-list">
+                        <li>Đang tải dữ liệu...</li>
+                    </ul>
+                </div>
+            </section>
 
-window.addEventListener('keyup', (e) => {
-  if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-  if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-});
+            <section class="card nav-section">
+                <h2><i class="fa-solid fa-compass"></i> Trạng Thái Di Chuyển</h2>
+                <div class="distance-display">
+                    <i class="fa-solid fa-ruler-horizontal"></i>
+                    <span>Khoảng cách vật cản: <strong id="val-distance">--</strong> cm</span>
+                </div>
+                
+                <div class="nav-action-box" id="nav-action-display">
+                    <i class="fa-solid fa-arrows-spin spin-icon"></i>
+                    <span id="nav-decision-text">Đang tính toán hướng đi...</span>
+                </div>
 
-// ==========================================
-// 2. KHỞI TẠO BẢN ĐỒ (MAP OBJECTS)
-// ==========================================
+                <div class="control-panel">
+                    <h3>Điều khiển thủ công</h3>
+                    <div class="btn-group">
+                        <button class="btn" id="btn-auto"><i class="fa-solid fa-wand-magic-sparkles"></i> Tự động</button>
+                        <button class="btn btn-danger" id="btn-stop"><i class="fa-solid fa-hand"></i> Dừng Robot</button>
+                    </div>
+                </div>
+            </section>
 
-// Mặt đất chính (y = 300)
-const ground = { x: 0, y: 300, width: 600, height: 50 };
+            <section class="card logs-section">
+                <h2><i class="fa-solid fa-list-check"></i> Nhật Ký Hoạt Động (Cloud Logs)</h2>
+                <div class="log-console" id="log-console">
+                    <p class="log-item info">[SYSTEM] Đã khởi tạo hệ thống AuraBot Dashboard...</p>
+                </div>
+            </section>
 
-// Cầu / Platform tầng trên (Đặt ở x = 320 -> Không che lò xo)
-const upperBridge = { x: 320, y: 160, width: 180, height: 20 };
+        </main>
+    </div>
 
-// Khối hộp lơ lửng ở giữa màn (x = 180)
-const questionBlock = { x: 180, y: 120, width: 30, height: 30 };
-
-// LỜI GIẢI LÒ XO: Đặt tại x = 180, trên mặt đất (y = 280), ngay dưới Khối hộp
-class Spring {
-  constructor(x, y, width, height, bounceForce = -15) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.bounceForce = bounceForce;
-  }
-
-  draw() {
-    ctx.fillStyle = '#aaa';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.fillStyle = '#555';
-    ctx.fillRect(this.x + 4, this.y + 4, this.width - 8, this.height - 4);
-  }
-
-  checkBounce(p) {
-    if (
-      p.x < this.x + this.width &&
-      p.x + p.width > this.x &&
-      p.y + p.height >= this.y &&
-      p.y + p.height <= this.y + 12 &&
-      p.vy > 0
-    ) {
-      p.vy = this.bounceForce; // Bật vọt lên khoảng không trống
-      p.isGrounded = false;
-    }
-  }
-}
-
-// LỜI GIẢI ỐNG TRỤ MARIO: Vật thể đặc, cản xuyên hoàn toàn
-class Pipe {
-  constructor(x, y, width, height) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-  }
-
-  draw() {
-    // Thân ống
-    ctx.fillStyle = '#00a800';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(this.x, this.y, this.width, this.height);
-    // Vành ống
-    ctx.fillRect(this.x - 4, this.y, this.width + 8, 16);
-    ctx.strokeRect(this.x - 4, this.y, this.width + 8, 16);
-  }
-
-  resolveCollision(p) {
-    if (
-      p.x < this.x + this.width &&
-      p.x + p.width > this.x &&
-      p.y < this.y + this.height &&
-      p.y + p.height > this.y
-    ) {
-      let overlapLeft = (p.x + p.width) - this.x;
-      let overlapRight = (this.x + this.width) - p.x;
-      let overlapTop = (p.y + p.height) - this.y;
-      let overlapBottom = (this.y + this.height) - p.y;
-
-      let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
-      if (minOverlap === overlapTop && p.vy >= 0) {
-        // Đứng lên đỉnh ống trụ
-        p.y = this.y - p.height;
-        p.vy = 0;
-        p.isGrounded = true;
-      } else if (minOverlap === overlapLeft) {
-        // Bị cản bên trái (Không đi xuyên qua)
-        p.x = this.x - p.width;
-      } else if (minOverlap === overlapRight) {
-        // Bị cản bên phải (Không đi xuyên qua)
-        p.x = this.x + this.width;
-      } else if (minOverlap === overlapBottom) {
-        // Va đầu dưới đáy ống trụ
-        p.y = this.y + this.height;
-        p.vy = 0;
-      }
-    }
-  }
-}
-
-// Khởi tạo các đối tượng
-const spring = new Spring(180, 280, 30, 20, -15);
-const pipe = new Pipe(400, 220, 50, 80);
-
-// ==========================================
-// 3. VÒNG LẶP GAME (GAME LOOP)
-// ==========================================
-
-function update() {
-  // Di chuyển ngang
-  if (keys.right) player.vx = player.speed;
-  else if (keys.left) player.vx = -player.speed;
-  else player.vx = 0;
-
-  player.x += player.vx;
-
-  // Trọng lực & Di chuyển dọc
-  player.vy += GRAVITY;
-  player.y += player.vy;
-  player.isGrounded = false;
-
-  // Va chạm Mặt đất
-  if (player.y + player.height >= ground.y) {
-    player.y = ground.y - player.height;
-    player.vy = 0;
-    player.isGrounded = true;
-  }
-
-  // Va chạm Cầu trên (Platforms)
-  if (
-    player.x < upperBridge.x + upperBridge.width &&
-    player.x + player.width > upperBridge.x &&
-    player.y + player.height >= upperBridge.y &&
-    player.y + player.height <= upperBridge.y + 12 &&
-    player.vy >= 0
-  ) {
-    player.y = upperBridge.y - player.height;
-    player.vy = 0;
-    player.isGrounded = true;
-  }
-
-  // Va chạm Lò xo & Ống trụ
-  spring.checkBounce(player);
-  pipe.resolveCollision(player);
-
-  // Giới hạn biên màn chơi
-  if (player.x < 0) player.x = 0;
-  if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Vẽ mặt đất
-  ctx.fillStyle = '#c84c0c';
-  ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
-  ctx.fillStyle = '#fcb438';
-  ctx.fillRect(ground.x, ground.y, ground.width, 6);
-
-  // Vẽ Cầu trên
-  ctx.fillStyle = '#fcb438';
-  ctx.fillRect(upperBridge.x, upperBridge.y, upperBridge.width, upperBridge.height);
-
-  // Vẽ Khối hộp Question Block
-  ctx.fillStyle = '#fcb438';
-  ctx.fillRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
-  ctx.strokeStyle = '#000';
-  ctx.strokeRect(questionBlock.x, questionBlock.y, questionBlock.width, questionBlock.height);
-
-  // Vẽ Lò xo & Ống trụ
-  spring.draw();
-  pipe.draw();
-
-  // Vẽ Player (Mario)
-  ctx.fillStyle = '#ff0000';
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-}
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-
-loop();
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
